@@ -32,38 +32,22 @@ def draw_keypoints(image, keypoints, keypoint_conf=None, classes=None, box_conf=
     # 为不同的类别预设不同的颜色
     colors = [(0, 255, 0), (0, 0, 255), (255, 0, 0), (255, 255, 0), (0, 255, 255)]
     
-    # 关键点连接关系（示例，需要根据实际模型调整）
-    # 此处假设关键点的顺序是[上口, 下口, 左侧, 右侧, ...]
-    connections = [
-        (0, 1),  # 上口到下口
-        (0, 2),  # 上口到左侧
-        (0, 3),  # 上口到右侧
-        (1, 2),  # 下口到左侧
-        (1, 3),  # 下口到右侧
-        (2, 3),  # 左侧到右侧
-    ]
-    
     # 绘制每个对象的关键点
     for i, kpts in enumerate(keypoints):
         # 选择颜色
         color_idx = int(classes[i]) if classes is not None else 0
         color = colors[color_idx % len(colors)]
         
-        # 绘制连接线
-        for conn in connections:
-            pt1 = tuple(map(int, kpts[conn[0]]))
-            pt2 = tuple(map(int, kpts[conn[1]]))
-            
-            # 检查两个关键点是否都可见
-            kpt1_visible = keypoint_conf is None or keypoint_conf[i][conn[0]] > 0.5
-            kpt2_visible = keypoint_conf is None or keypoint_conf[i][conn[1]] > 0.5
-            
-            if kpt1_visible and kpt2_visible:
-                cv2.line(img, pt1, pt2, color, 2)
-        
         # 绘制关键点
         for j, (x, y) in enumerate(kpts):
-            if keypoint_conf is None or keypoint_conf[i][j] > 0.5:
+            # 修改这里的条件判断逻辑，避免None与float比较
+            conf_check = False
+            if keypoint_conf is None:
+                conf_check = True
+            elif j < len(keypoint_conf[i]) and keypoint_conf[i][j] is not None and keypoint_conf[i][j] > 0.5:
+                conf_check = True
+                
+            if conf_check:
                 cv2.circle(img, (int(x), int(y)), 5, color, -1)
         
         # 如果有类别和置信度信息，添加标签
