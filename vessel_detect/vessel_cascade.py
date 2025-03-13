@@ -4,14 +4,15 @@ from vessel_detect.vessel_bbox import VesselDetector
 from vessel_detect.vessel_pose import VesselPoseDetector
 from utils.fps_caculator import FpsCalculator
 from utils.draw_fps import draw_fps
+from utils.draw_keypoints import draw_keypoints
 
 class VesselCascadeDetector:
     def __init__(
         self, 
         bbox_model_path=r"models\vessels-bbox-nano.pt",
-        pose_model_path=r"models\vesse-pose-nano.pt", 
+        pose_model_path=r"models\vessels-pose-nano.pt", 
         bbox_conf=0.5,
-        pose_conf=0.5,
+        pose_conf=0.7,
         margin=5
     ):
         """
@@ -76,10 +77,77 @@ class VesselCascadeDetector:
             # 确保裁剪区域有效
             if cropped_region.size > 0:
                 # 步骤3: 对裁剪区域进行姿态检测
-                pose_processed_region, pose_info = self.pose_detector.detect_frame(cropped_region)
+                results = self.pose_detector.detect(cropped_region)
                 
-                # 步骤4: 将处理后的区域放回原图
-                processed_frame[y1:y2, x1:x2] = pose_processed_region
+                # 初始化姿态信息字典
+                pose_info = {'poses': []}
+                
+                # 处理检测结果
+                for result in results:
+                    if result.keypoints is not None:
+                        # 提取关键点信息
+                        keypoints_xy_data = result.keypoints.xy
+                        keypoints_conf_data = result.keypoints.conf if hasattr(result.keypoints, 'conf') else None
+                        
+                        # 准备绘制关键点所需的数据
+                        keypoints_list = []
+                        keypoint_conf_list = []
+                        classes_list = []
+                        box_conf_list = []
+                        
+                        for i in range(len(keypoints_xy_data)):
+                            if i < len(result.boxes.cls):
+                                cls_id = int(result.boxes.cls[i].item())
+                                score = result.boxes.conf[i].item()
+                                
+                                # 提取当前对象的关键点
+                                kpts = []
+                                confs = []
+                                
+                                # 将坐标从裁剪区域映射回原图
+                                for j, xy in enumerate(keypoints_xy_data[i]):
+                                    orig_x = xy[0].item() + x1
+                                    orig_y = xy[1].item() + y1
+                                    kpts.append([orig_x, orig_y])
+                                    
+                                    if keypoints_conf_data is not None:
+                                        confs.append(keypoints_conf_data[i][j].item())
+                                    else:
+                                        confs.append(1.0)
+                                
+                                # 收集处理后的数据
+                                keypoints_list.append(kpts)
+                                keypoint_conf_list.append(confs)
+                                classes_list.append(cls_id)
+                                box_conf_list.append(score)
+                                
+                                # 为每个检测到的物体构建关键点信息
+                                keypoints_data = []
+                                for j, (xy, conf) in enumerate(zip(kpts, confs)):
+                                    keypoints_data.append({
+                                        'x': xy[0],
+                                        'y': xy[1],
+                                        'confidence': conf,
+                                        'name': f'keypoint_{j}'
+                                    })
+                                
+                                # 添加到姿态信息中
+                                pose_info['poses'].append({
+                                    'class_id': cls_id,
+                                    'label': self.pose_detector.model.names[cls_id],
+                                    'score': score,
+                                    'keypoints': keypoints_data
+                                })
+                        
+                        # 在原图上绘制关键点
+                        if keypoints_list:
+                            processed_frame = draw_keypoints(
+                                processed_frame,
+                                np.array(keypoints_list),
+                                np.array(keypoint_conf_list),
+                                np.array(classes_list),
+                                np.array(box_conf_list)
+                            )
                 
                 # 收集检测信息
                 result = {
