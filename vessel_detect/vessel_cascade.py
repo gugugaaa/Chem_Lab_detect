@@ -9,7 +9,7 @@ class VesselCascadeDetector:
     def __init__(
         self, 
         bbox_model_path=r"models\vessels-bbox-nano.pt",
-        pose_model_path=r"models\vessel-pose-nano.pt", 
+        pose_model_path=r"models\vesse-pose-nano.pt", 
         bbox_conf=0.5,
         pose_conf=0.5,
         margin=5

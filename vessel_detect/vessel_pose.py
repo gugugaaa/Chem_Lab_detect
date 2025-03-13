@@ -10,7 +10,7 @@ from utils.draw_fps import draw_fps
 from utils.fps_caculator import FpsCalculator
 
 class VesselPoseDetector:
-    def __init__(self, model_path=r"models\vessel-pose-nano.pt", conf=0.5):
+    def __init__(self, model_path=r"models\vesse-pose-nano.pt", conf=0.5):
         """
         初始化容器姿态检测器
         
