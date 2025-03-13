@@ -1,19 +1,20 @@
 # Chemistry Lab Detection System 🔬
 
-A computer vision system for detecting and analyzing laboratory vessels and equipment in real-time.
+A computer vision system for real-time detection and analysis of laboratory vessels and equipment.
 
 ## Project Overview ✨
 
-This project uses a cascade detection approach to identify laboratory vessels and determine their pose/orientation. The system employs **two-stage detection**:
+This project employs a cascade detection approach to identify laboratory vessels and determine their pose/orientation. The system utilizes **two-stage detection**:
 1. First detecting the vessel's boundary box
 2. Then analyzing the vessel's precise pose and orientation
 
 ## Key Features 🚀
 
 - **Real-time vessel detection** in video streams
-- Cascade detection framework (boundary box → pose detection)
-- FPS calculation and display
-- Support for **multiple vessel types**
+- Advanced cascade detection framework (boundary box → pose detection)
+- Performance monitoring with FPS calculation and display
+- Comprehensive support for **multiple vessel types**
+- High accuracy pose estimation
 
 ## Project Structure 📁
 
@@ -27,7 +28,7 @@ Chem_Lab_detect/
 │   ├── vessel_pose.py       # Pose detection
 │   └── vessel_cascade.py    # Cascade detection pipeline
 ├── utils/                   # Utility functions
-│   ├── fps_caculator.py     # FPS calculation
+│   ├── fps_calculator.py    # FPS calculation
 │   └── draw_fps.py          # FPS display functions
 ```
 
@@ -53,9 +54,9 @@ processed_frame, detection_info = detector.detect_frame(image)
 
 ## Requirements ⚙️
 
-- OpenCV
-- NumPy
-- PyTorch (for the detection models)
+- OpenCV 4.5+
+- NumPy 1.20+
+- PyTorch 1.8+ (for the detection models)
 
 ## Installation 📋
 
