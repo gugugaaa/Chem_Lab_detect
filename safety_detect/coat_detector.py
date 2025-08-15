@@ -12,7 +12,7 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
 class CoatDetector:
-    def __init__(self, model_path=r"models\coat_detect.tflite", score_threshold=0.3, max_results=3):
+    def __init__(self, model_path="models/coat_detect.tflite", score_threshold=0.3, max_results=3):
         """
         初始化工作服检测器
         

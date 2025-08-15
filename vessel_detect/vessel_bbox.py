@@ -8,7 +8,7 @@ from utils.draw_fps import draw_fps
 from utils.fps_caculator import FpsCalculator
 
 class VesselDetector:
-    def __init__(self, model_path=r"models\vessels-bbox-nano.pt"):
+    def __init__(self, model_path="models/vessels-bbox-nano.pt"):
         """
         初始化容器检测器
         

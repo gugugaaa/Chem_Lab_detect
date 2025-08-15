@@ -9,8 +9,14 @@ from utils.draw_keypoints import draw_keypoints
 from utils.draw_fps import draw_fps
 from utils.fps_caculator import FpsCalculator
 
+keypoint_names = [
+    'kp1', 'kp2', 'kp3', 'kp4', 'kp5', 'kp6', 'kp7', 'kp8', 'kp9', 'kp10',
+    'kp11', 'kp12', 'kp13', 'kp14', 'kp15', 'kp16', 'kp17', 'kp18', 'kp19', 'kp20'
+    # 按实际模型关键点顺序填写，数量需与模型输出一致
+]
+
 class VesselPoseDetector:
-    def __init__(self, model_path=r"models\vesse-pose-nano.pt", conf=0.5):
+    def __init__(self, model_path="models/vesse-pose-nano.pt", conf=0.5):
         """
         初始化容器姿态检测器
         
@@ -81,19 +87,21 @@ class VesselPoseDetector:
                             keypoints_data = []
                             if keypoints_conf_data is not None:
                                 for j, (xy, conf) in enumerate(zip(keypoints_xy_data[i], keypoints_conf_data[i])):
+                                    name = keypoint_names[j] if j < len(keypoint_names) else f'keypoint_{j}'
                                     keypoints_data.append({
                                         'x': xy[0].item(),
                                         'y': xy[1].item(),
                                         'confidence': conf.item(),
-                                        'name': f'keypoint_{j}'  # 可以根据实际情况命名
+                                        'name': name
                                     })
                             else:
                                 for j, xy in enumerate(keypoints_xy_data[i]):
+                                    name = keypoint_names[j] if j < len(keypoint_names) else f'keypoint_{j}'
                                     keypoints_data.append({
                                         'x': xy[0].item(),
                                         'y': xy[1].item(),
                                         'confidence': None,
-                                        'name': f'keypoint_{j}'
+                                        'name': name
                                     })
                             
                             # 创建姿态信息

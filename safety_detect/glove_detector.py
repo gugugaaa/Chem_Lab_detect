@@ -12,7 +12,7 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
 class GloveDetector:
-    def __init__(self, model_path=r"models\glove_detect.tflite", score_threshold=0.3, max_results=3):
+    def __init__(self, model_path="models/glove_detect.tflite", score_threshold=0.3, max_results=3):
         """
         初始化手套检测器
         
