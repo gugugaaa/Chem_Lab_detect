@@ -173,7 +173,7 @@ class ManPoseDetector:
             print(f"Error: Could not read image from {image_path}")
             return
         # 使用detect_frame方法
-        processed_frame, detection_info = self.detect_frame(img)
+        processed_frame, detection_info = self.detect_frame(img, show_names=True)
         cv2.imshow("Pose Detection", processed_frame)   
         cv2.waitKey(0)
 
@@ -182,4 +182,4 @@ class ManPoseDetector:
 if __name__ == "__main__":
     detector = ManPoseDetector()
     # 示例：请替换为你的图片路径
-    detector.debug_image_predict("examples/man_pose_test.png")
+    detector.debug_image_predict("examples/safety_test.png")

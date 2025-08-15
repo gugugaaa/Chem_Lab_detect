@@ -1,6 +1,4 @@
 import cv2
-import random
-import time
 from ultralytics import YOLO
 import os
 import sys
@@ -9,10 +7,18 @@ from utils.draw_bbox import draw_boxes
 from utils.draw_fps import draw_fps
 from utils.fps_caculator import FpsCalculator
 
+"""
+识别结果：
+0-blue_glove
+1-naked_hand
+2-lab_coat
+"""
+
+# BGR格式颜色
 wearing_bbox_colors = [
-    (220, 180, 120),  # 米白色
-    (180, 200, 255),  # 浅蓝色
-    (180, 210, 255),  # 肉色偏黄
+    (255, 204, 153),  # 浅蓝色
+    (120, 180, 255),  # 肉色偏黄
+    (220, 230, 245),  # 米白色
 ]
 
 class WearingDetector:
@@ -50,7 +56,7 @@ class WearingDetector:
             detection_info: 检测结果信息
         """
         # 进行物体检测
-        results = self.model(frame)
+        results = self.model.predict(frame, imgsz=224)
 
         bboxes_info = []
 

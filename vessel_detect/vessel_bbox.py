@@ -30,7 +30,7 @@ class VesselDetector:
         """析构函数，释放资源"""
         if hasattr(self, 'model'):
             del self.model
-            
+
     def detect_frame(self, frame, bbox_colors=vessel_bbox_colors, show_names=False, draw_bbox=True):
         """
         检测单帧图像
@@ -46,7 +46,7 @@ class VesselDetector:
             detection_info: 检测结果信息
         """
         # 进行物体检测
-        results = self.model(frame)
+        results = self.model.predict(frame, imgsz=224)
 
         bboxes_info = []
 

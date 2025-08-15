@@ -1,188 +1,226 @@
 import cv2
-import time
-import numpy as np
+import sys
+import os
+from ultralytics import YOLO
 
-from safety_detect.glove_detector import GloveDetector
-from safety_detect.coat_detector import CoatDetector
-from utils.fps_caculator import FpsCalculator
+# 添加项目根目录到路径
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.draw_keypoints import draw_keypoints
+from utils.draw_bbox import draw_boxes
 from utils.draw_fps import draw_fps
+from utils.fps_caculator import FpsCalculator
+
+man_keypoint_names = [
+    'nose', 'left_eye', 'right_eye', 'left_ear', 'right_ear',
+    'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow', 'left_wrist',
+    'right_wrist', 'left_hip', 'right_hip', 'left_knee', 'right_knee',
+    'left_ankle', 'right_ankle'
+]
+
+# 肉色-粉色渐变，左右对称（BGR顺序）
+man_keypoint_colors = [(189,224,255),(203,192,255),(203,192,255),(220,184,255),(220,184,255),(233,174,255),(233,174,255),(245,170,255),(245,170,255),(255,182,193),(255,182,193),(255,192,203),(255,192,203),(255,204,229),(255,204,229),(255,228,240),(255,228,240)]
+
+# BGR格式颜色
+wearing_bbox_colors = [
+    (255, 204, 153),  # 浅蓝色
+    (120, 180, 255),  # 肉色偏黄
+    (220, 230, 245),  # 米白色
+]
 
 class SafetyDetector:
-    def __init__(self, 
-                 glove_model_path=r"models\glove_detect.tflite", 
-                 coat_model_path=r"models\coat_detect.tflite",
-                 glove_score_threshold=0.3,
-                 coat_score_threshold=0.85,
-                 max_results=3):
+    def __init__(self, man_model_path="models/man_pose.pt", wearing_model_path="models/wearing.pt", conf=0.5, show_kpt_names=False):
         """
         初始化安全检测器
         
         Args:
-            glove_model_path: 手套检测模型路径
-            coat_model_path: 实验服检测模型路径
-            score_threshold: 检测阈值
-            max_results: 最大检测结果数
+            man_model_path: 人体姿态模型路径
+            wearing_model_path: 穿戴检测模型路径
+            conf: 置信度阈值
+            show_kpt_names: 是否在关键点旁显示名称
         """
-        # 初始化子检测器
-        self.glove_detector = GloveDetector(
-            model_path=glove_model_path, 
-            score_threshold=glove_score_threshold,
-            max_results=max_results
-        )
-        
-        self.coat_detector = CoatDetector(
-            model_path=coat_model_path,
-            score_threshold=coat_score_threshold,
-            max_results=max_results
-        )
-        
+        self.man_model = YOLO(man_model_path, verbose=False)
+        self.wearing_model = YOLO(wearing_model_path, verbose=False)
+        self.conf = conf
+        self.show_kpt_names = show_kpt_names
         self.fps_calculator = FpsCalculator(buffer_len=100)
     
+    def __del__(self):
+        """析构函数，释放资源"""
+        if hasattr(self, 'man_model'):
+            del self.man_model
+        if hasattr(self, 'wearing_model'):
+            del self.wearing_model
+
     def detect_frame(self, frame):
         """
-        检测单帧图像，同时进行手套和实验服检测
+        检测单帧图像
         
         Args:
             frame: 输入的图像帧(BGR格式)
             
         Returns:
-            processed_frame: 处理后的帧(带有检测框和安全状态)
-            safety_info: 安全状态信息字典
+            processed_frame: 处理后的帧(带有关键点和检测框)
+            detection_info: 检测结果信息
         """
-        # 分别进行手套和实验服检测
-        glove_frame, glove_info = self.glove_detector.detect_frame(frame.copy())
-        coat_frame, coat_info = self.coat_detector.detect_frame(frame.copy())
+        # 进行人体姿态检测
+        man_results = self.man_model.predict(frame, conf=self.conf, imgsz=224)
         
-        # 合并结果到原始帧上
-        processed_frame = frame.copy()
-        
-        # 从glove_frame和coat_frame提取检测框并绘制到processed_frame上
-        for detection in glove_info['detections']:
-            bbox = detection.bounding_box
-            x, y = bbox.origin_x, bbox.origin_y
-            w, h = bbox.width, bbox.height
-            score = detection.categories[0].score
-            label = detection.categories[0].category_name
-            
-            # 为不同类别设置不同颜色
-            color = (0, 255, 0) if label == "blue_glove" else (0, 0, 255)  # 绿色表示手套，红色表示裸手
-            
-            # 绘制边界框
-            cv2.rectangle(processed_frame, (x, y), (x + w, y + h), color, 2)
-            
-            # 绘制标签和置信度
-            text = f"{label}: {score:.2f}"
-            cv2.putText(processed_frame, text, (x, y - 10), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-        
-        for detection in coat_info['detections']:
-            bbox = detection.bounding_box
-            x, y = bbox.origin_x, bbox.origin_y
-            w, h = bbox.width, bbox.height
-            score = detection.categories[0].score
-            label = detection.categories[0].category_name
-            
-            # 为不同类别设置不同颜色
-            color = (0, 255, 0) if label == "lab_coat" else (0, 0, 255)  # 绿色表示实验服，红色表示无实验服
-            
-            # 绘制边界框
-            cv2.rectangle(processed_frame, (x, y), (x + w, y + h), color, 2)
-            
-            # 绘制标签和置信度
-            text = f"{label}: {score:.2f}"
-            cv2.putText(processed_frame, text, (x, y - 10), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-        
-        # 判断安全状态
-        is_safe = coat_info['coat_detected'] and not glove_info['bare_hand_detected']
-        safety_status = "SAFE" if is_safe else "UNSAFE"
-        safety_color = (0, 255, 0) if is_safe else (0, 0, 255)  # 绿色表示安全，红色表示不安全
-        
-        # 在画面上显示安全状态
-        cv2.putText(
-            processed_frame, 
-            f"Status: {safety_status}", 
-            (10, 60), 
-            cv2.FONT_HERSHEY_SIMPLEX, 
-            0.7, 
-            safety_color, 
-            2
-        )
-        
-        # 显示问题
-        if not coat_info['coat_detected']:
-            cv2.putText(processed_frame, "No Lab Coat!", (10, 90), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-            
-        if glove_info['bare_hand_detected']:
-            cv2.putText(processed_frame, "Bare Hands Detected!", (10, 120), 
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-        
-        # 计算并显示FPS
+        poses_info = []
+
+        for result in man_results:
+            if result.keypoints is not None and len(result.boxes) > 0:
+                # 为了稳定，只处理第一个人
+                box = result.boxes[0]
+                xyxy = box.xyxy[0].tolist()
+                keypoints_xy = result.keypoints.xy[0].tolist()
+                cls_id = int(box.cls.item())
+                score = box.conf.item()
+                label = self.man_model.names[cls_id]
+                keypoints_conf_data = result.keypoints.conf[0].tolist() if hasattr(result.keypoints, 'conf') and result.keypoints.conf is not None else [0.0] * len(keypoints_xy)
+                keypoints_data = []
+                for j, xy in enumerate(keypoints_xy):
+                    name = man_keypoint_names[j] if j < len(man_keypoint_names) else f'keypoint_{j}'
+                    keypoints_data.append({
+                        'x': xy[0],
+                        'y': xy[1],
+                        'confidence': keypoints_conf_data[j],
+                        'name': name
+                    })
+                pose_info = {
+                    'class_id': cls_id,
+                    'label': label,
+                    'score': score,
+                    'keypoints': keypoints_data,
+                    'box': xyxy
+                }
+                poses_info.append(pose_info)
+                break  # 只取第一个人
+
+        if len(poses_info) == 0:
+            # 无人检测到
+            hand_safety = {'left_hand': 'invisible', 'right_hand': 'invisible'}
+            coat_safety = 'invisible'
+            bboxes_info = []
+        else:
+            # 进行穿戴检测
+            wearing_results = self.wearing_model.predict(frame, conf=self.conf, imgsz=224)
+            bboxes_info = []
+            for result in wearing_results:
+                boxes = result.boxes
+                for box in boxes:
+                    cls_id = int(box.cls.item())
+                    score = box.conf.item()
+                    label = self.wearing_model.names[cls_id]
+                    # 坐标全部转为int，防止OpenCV报错
+                    xyxy = list(map(int, box.xyxy[0].tolist()))
+                    bbox_info = {
+                        'class_id': cls_id,
+                        'label': label,
+                        'score': score,
+                        'box': xyxy
+                    }
+                    bboxes_info.append(bbox_info)
+
+            # 匹配逻辑
+            pose = poses_info[0]
+            # coat_safety
+            has_lab_coat = any(bbox['class_id'] == 2 for bbox in bboxes_info)
+            upper_body_names = ['left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow', 'left_wrist', 'right_wrist', 'left_hip', 'right_hip']
+            visible_upper_count = sum(1 for kp in pose['keypoints'] if kp['name'] in upper_body_names and kp['confidence'] > 0.5)
+            all_shoulders_hips_visible = all(kp['confidence'] > 0.5 for kp in pose['keypoints'] if kp['name'] in ['left_shoulder', 'right_shoulder', 'left_hip', 'right_hip'])
+            if has_lab_coat:
+                coat_safety = 'lab_coat'
+            elif all_shoulders_hips_visible:
+                coat_safety = 'no_lab_coat'
+            elif visible_upper_count < 4:
+                coat_safety = 'invisible'
+            else:
+                coat_safety = 'too_close'
+
+            # hand_safety
+            body_width = pose['box'][2] - pose['box'][0]
+            dist_thresh = 0.2 * body_width  # 距离阈值为人体框宽度的20%
+            def get_kp(name):
+                return next((kp for kp in pose['keypoints'] if kp['name'] == name), None)
+
+            def determine_hand_safety(wrist_kp, bboxes):
+                if wrist_kp is None or wrist_kp['confidence'] <= 0.5:
+                    return 'invisible'
+                wx, wy = wrist_kp['x'], wrist_kp['y']
+                matched_glove = False
+                matched_naked = False
+                for bbox in bboxes:
+                    if bbox['class_id'] not in [0, 1]:  # 0: blue_glove, 1: naked_hand
+                        continue
+                    bx1, by1, bx2, by2 = bbox['box']
+                    cx = (bx1 + bx2) / 2
+                    cy = (by1 + by2) / 2
+                    dist = ((wx - cx) ** 2 + (wy - cy) ** 2) ** 0.5
+                    if dist < dist_thresh:
+                        if bbox['class_id'] == 0:
+                            matched_glove = True
+                        elif bbox['class_id'] == 1:
+                            matched_naked = True
+                if matched_glove:
+                    return 'glove'
+                elif matched_naked:
+                    return 'naked_hand'
+                else:
+                    return 'invisible'  # 无匹配，视为invisible
+
+            left_wrist = get_kp('left_wrist')
+            right_wrist = get_kp('right_wrist')
+            hand_safety = {
+                'left_hand': determine_hand_safety(left_wrist, bboxes_info),
+                'right_hand': determine_hand_safety(right_wrist, bboxes_info)
+            }
+
+        # 计算FPS
         avg_fps = self.fps_calculator.get()
-        processed_frame = draw_fps(processed_frame, avg_fps)
-        
-        # 整合安全信息
-        safety_info = {
-            'is_safe': is_safe,
-            'glove_info': glove_info,
-            'coat_info': coat_info,
-            'fps': avg_fps
+
+        detection_info = {
+            'hand_safety': hand_safety,
+            'coat_safety': coat_safety,
+            'fps': avg_fps,
+            'man_detected': len(poses_info)
         }
-        
-        return processed_frame, safety_info
-    
-    def process_video(self, video_source=0, display=True, save_path=None):
+
+        # 绘制
+        processed_frame = frame.copy()
+        if poses_info:
+            processed_frame = draw_keypoints(
+                processed_frame,
+                {'poses': poses_info},
+                keypoint_colors=man_keypoint_colors,
+                show_names=self.show_kpt_names,
+                draw_bbox=True
+            )
+        processed_frame = draw_boxes(
+            processed_frame,
+            {'bboxes': bboxes_info},
+            bbox_colors=wearing_bbox_colors,
+            show_names=False,
+            draw_bbox=True
+        )
+        processed_frame = draw_fps(processed_frame, avg_fps)
+
+        return processed_frame, detection_info
+
+    def debug_image_predict(self, image_path):
         """
-        处理视频流
-        
-        Args:
-            video_source: 视频源，可以是摄像头索引或视频文件路径
-            display: 是否显示处理结果
-            save_path: 如果不为None，将处理后的视频保存到指定路径
-            
-        Returns:
-            None
+        临时debug方法：读取一张图片
         """
-        cap = cv2.VideoCapture(video_source)
-        
-        if not cap.isOpened():
-            print("Error: Could not open video source.")
+        img = cv2.imread(image_path)
+        if img is None:
+            print(f"Error: Could not read image from {image_path}")
             return
-        
-        # 视频写入器
-        writer = None
-        if save_path:
-            width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            fps = cap.get(cv2.CAP_PROP_FPS)
-            fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            writer = cv2.VideoWriter(save_path, fourcc, fps, (width, height))
-            
-        try:
-            while True:
-                ret, frame = cap.read()
-                if not ret:
-                    break
-                
-                processed_frame, safety_info = self.detect_frame(frame)
-                
-                if writer:
-                    writer.write(processed_frame)
-                    
-                if display:
-                    cv2.imshow("Safety Detection", processed_frame)
-                    if cv2.waitKey(15) & 0xFF == 27:  # 按ESC退出
-                        break
-                        
-        finally:
-            cap.release()
-            if writer:
-                writer.release()
-            if display:
-                cv2.destroyAllWindows()
+        processed_frame, detection_info = self.detect_frame(img)
+        cv2.imshow("Safety Detection", processed_frame)   
+        cv2.waitKey(0)
+        print(detection_info)
 
 # 示例用法
 if __name__ == "__main__":
     detector = SafetyDetector()
-    detector.process_video(0)  # 使用摄像头索引0
+    # 示例：请替换为你的图片路径
+    detector.debug_image_predict("examples/safety_test.png")

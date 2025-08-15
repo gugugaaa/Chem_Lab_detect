@@ -21,62 +21,9 @@ This project employs a cascade detection approach to identify laboratory vessels
 ```
 Chem_Lab_detect/
 ├── models/                  # Trained ML models
-│   ├── vessels-bbox-nano.pt # Vessel boundary box detection model
-│   └── vessel-pose-nano.pt  # Vessel pose detection model
-├── vessel_detect/           # Core detection modules
-│   ├── vessel_bbox.py       # Boundary box detection
-│   ├── vessel_pose.py       # Pose detection
-│   └── vessel_cascade.py    # Cascade detection pipeline
-├── utils/                   # Utility functions
-│   ├── fps_calculator.py    # FPS calculation
-│   └── draw_fps.py          # FPS display functions
+├── safety_detect/           # Safety detection (glove/naked_hand, lab_coat)
+├── vessel_detect/           # Vessel detection (vessel_bbox, vessel_cascade)
+├── chem_lab_agent/          # LLM agent for chemical lab operations (Q&A)
+├── utils/                   # Utility functions (drawing)
+└── examples/                # Examples to debug on
 ```
-
-## Usage 💻
-
-Basic usage example:
-
-```python
-from vessel_detect.vessel_cascade import VesselCascadeDetector
-
-# Initialize the detector with default models
-detector = VesselCascadeDetector()
-
-# Process video from webcam
-detector.process_video(0)  # Use camera index 0
-
-# Process a video file
-detector.process_video("path/to/video.mp4")
-
-# Process a single frame
-processed_frame, detection_info = detector.detect_frame(image)
-```
-
-## Requirements ⚙️
-
-- OpenCV 4.5+
-- NumPy 1.20+
-- PyTorch 1.8+ (for the detection models)
-
-## Installation 📋
-
-Clone the repository and ensure you have the **required models** in the `models/` directory:
-
-```bash
-git clone https://github.com/yourusername/Chem_Lab_detect.git
-cd Chem_Lab_detect
-```
-
----
-
-## A Light Moment 🌸
-
-```
-試験管と
-カメラの目が
-見つめ合う
-```
-
-*Test tubes and flasks  
-The camera's watchful eye  
-They meet in silence*
