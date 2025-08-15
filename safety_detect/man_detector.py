@@ -9,15 +9,15 @@ from utils.draw_keypoints import draw_keypoints
 from utils.draw_fps import draw_fps
 from utils.fps_caculator import FpsCalculator
 
-keypoint_names = [
+man_keypoint_names = [
     'nose', 'left_eye', 'right_eye', 'left_ear', 'right_ear',
     'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow', 'left_wrist',
     'right_wrist', 'left_hip', 'right_hip', 'left_knee', 'right_knee',
     'left_ankle', 'right_ankle'
 ]
 
-# 从上到下用肉色-粉色-棕色，左右对称
-keypoint_colors = [(255,224,189),(255,192,203),(255,192,203),(255,182,193),(255,182,193),(255,160,122),(255,160,122),(210,140,100),(210,140,100),(160,82,45),(160,82,45),(205,133,63),(205,133,63),(139,69,19),(139,69,19),(101,67,33),(101,67,33)]
+# 肉色-粉色渐变，左右对称（BGR顺序）
+man_keypoint_colors = [(189,224,255),(203,192,255),(203,192,255),(220,184,255),(220,184,255),(233,174,255),(233,174,255),(245,170,255),(245,170,255),(255,182,193),(255,182,193),(255,192,203),(255,192,203),(255,204,229),(255,204,229),(255,228,240),(255,228,240)]
 
 class ManPoseDetector:
     def __init__(self, model_path="models/man_pose.pt", conf=0.5, show_kpt_names=False):
@@ -82,7 +82,7 @@ class ManPoseDetector:
                     keypoints_data = []
                     if keypoints_conf_data is not None:
                         for j, (xy, conf) in enumerate(zip(keypoints_xy, keypoints_conf_data)):
-                            name = keypoint_names[j] if j < len(keypoint_names) else f'keypoint_{j}'
+                            name = man_keypoint_names[j] if j < len(man_keypoint_names) else f'keypoint_{j}'
                             keypoints_data.append({
                                 'x': xy[0],
                                 'y': xy[1],
@@ -91,7 +91,7 @@ class ManPoseDetector:
                             })
                     else:
                         for j, xy in enumerate(keypoints_xy):
-                            name = keypoint_names[j] if j < len(keypoint_names) else f'keypoint_{j}'
+                            name = man_keypoint_names[j] if j < len(man_keypoint_names) else f'keypoint_{j}'
                             keypoints_data.append({
                                 'x': xy[0],
                                 'y': xy[1],
@@ -106,27 +106,26 @@ class ManPoseDetector:
                         'box': xyxy
                     }
                     poses_info.append(pose_info)
-    
-        # 构建检测信息
+        
+        # 计算FPS并显示
+        avg_fps = self.fps_calculator.get()
+        processed_frame = draw_fps(processed_frame, avg_fps)
+
+        # 构建detection_info，fps已知
         detection_info = {
             'poses': poses_info,
-            'fps': None,  # 稍后填充
-            'detected_labels': [self.model.names[int(box.cls.item())] for result in results for box in result.boxes]
+            'fps': avg_fps,
+            'man_detected': len(poses_info)
         }
         
         # 使用新的绘制函数绘制关键点（遍历完成后统一绘制）
         processed_frame = draw_keypoints(
             processed_frame,
             detection_info,
-            keypoint_colors=keypoint_colors,
+            keypoint_colors=man_keypoint_colors,
             show_names=self.show_kpt_names,
             draw_bbox=True  # 可以根据需要设置
         )
-        
-        # 计算FPS并显示
-        avg_fps = self.fps_calculator.get()
-        detection_info['fps'] = avg_fps
-        processed_frame = draw_fps(processed_frame, avg_fps)
         
         return processed_frame, detection_info
     
@@ -183,4 +182,4 @@ class ManPoseDetector:
 if __name__ == "__main__":
     detector = ManPoseDetector()
     # 示例：请替换为你的图片路径
-    detector.debug_image_predict("test.png")
+    detector.debug_image_predict("examples/man_pose_test.png")

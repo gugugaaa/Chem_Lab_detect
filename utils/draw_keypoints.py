@@ -2,29 +2,33 @@ import cv2
 import numpy as np
 
 
-def draw_keypoints(image, detection_info, keypoint_colors=None, show_names=False, 
-                   name_color=(0, 0, 0), name_bg_color=(255, 255, 255), draw_bbox=False):
+def draw_keypoints(
+    image, detection_info, keypoint_colors=None, show_names=False, draw_bbox=False,
+    bbox_color=(255, 224, 189)
+):
     """
     根据检测信息绘制关键点到图像上
     
     参数:
         image: 原始图像
         detection_info: 检测信息字典，包含poses列表
-        keypoint_colors: 关键点颜色列表，如果为None则使用默认绿色
+        keypoint_colors: 关键点颜色列表，如果为None则使用默认浅黄色
         show_names: 是否显示关键点名称
-        name_color: 关键点名称文字颜色
-        name_bg_color: 关键点名称背景颜色
         draw_bbox: 是否绘制边界框
+        bbox_color: 边界框颜色，默认肉色
     
     返回:
         带有关键点的图像
     """
     img = image.copy()
     
-    # 默认关键点颜色（绿色）
-    default_color = (0, 255, 0)
+    # 默认关键点颜色（浅黄色）
+    default_color = (0, 255, 255)
     # 边界框颜色（肉色）
-    bbox_color = (255, 224, 189)
+    # bbox_color = (255, 224, 189)
+    # 关键点名称颜色和背景色（白底黑字）
+    name_color = (0, 0, 0)
+    name_bg_color = (255, 255, 255)
     
     # 如果没有检测到任何姿态，直接返回原图
     if 'poses' not in detection_info or not detection_info['poses']:
