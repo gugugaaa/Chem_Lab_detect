@@ -65,7 +65,7 @@ class WearingDetector:
             boxes = result.boxes
             for box in boxes:
                 cls_id = int(box.cls.item())
-                score = box.conf.item()
+                score = round(box.conf.item(), 2)
                 label = self.model.names[cls_id]
                 x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
                 xyxy = [x1, y1, x2, y2]

@@ -11,7 +11,7 @@
 
 ### man_detector.py
 
-{'poses': [{'class_id': 0, 'label': 'person', 'score': 0.9, 'keypoints': [{'x': 192.46, 'y': 94.95, 'confidence': 1.0, 'name': 'nose'}, ...], 'box': [13.46, 0.0, 469.62, 638.0]}], 'fps': 0.32, 'man_detected': 1}
+{'poses': [{'class_id': 0, 'label': 'person', 'score': 0.92, 'keypoints': [{'x': 192, 'y': 94, 'confidence': 0.88, 'name': 'nose'}, ...], 'box': [13, 0, 469, 638]}], 'fps': 0.32, 'man_detected': 1}
 
 ### safety_detector.py
 
@@ -20,7 +20,14 @@
 ## gesture_detect/
 
 ### gesture_detector.py
-{'hand_landmarks': [[(157, 99), ...], [(50, 162), ...]], 'handedness': [[Category(index=1, score=0.97, display_name='Left', category_name='Left')], [Category(index=0, score=0.95, display_name='Right', category_name='Right')]], 'hands_detected': 2, 'fps': 8.86}
 
+{'hands': [{'chirality': 'left/right', 'score': 0.91, 'keypoints': [{'x': 192, 'y': 94, 'name': 'nose'}, ...]}, {...}], 'fps': 0.32, 'hand_detected': 1}
 
-{'hands': [{'chirality': 'left/right', 'score': 0.9, 'keypoints': [{'x': 192.46, 'y': 94.95, 'name': 'nose'}, ...]}, {...}], 'fps': 0.32, 'hand_detected': 1}
+> BUG: new mediapipe hand landmarker has no api to fetch hand detection/presence/visibility score
+> using handedness score as score. cannot provide keypoint confidence.
+
+## vessel_detect
+
+### vessel_detector.py
+
+{'bboxes': [{'class_id': 1, 'label': 'beaker', 'score': 0.95, 'box': [136, 215, 299, 435]}, {'class_id': 0, 'label': 'graduated cylinder', 'score': 0.91, 'box': [322, 79, 453, 512]}], 'fps': 0.33}

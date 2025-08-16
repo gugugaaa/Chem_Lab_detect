@@ -1,3 +1,7 @@
+# drawing methods from https://github.com/Kazuhito00/hand-gesture-recognition-using-mediapipe/blob/main/app.py
+# original author 高橋かずひと(https://twitter.com/KzhtTkhs)
+# hand-gesture-recognition-using-mediapipe is under Apache License 2.0
+
 import cv2
 def draw_landmarks(image, landmark_point):
     # 连接线

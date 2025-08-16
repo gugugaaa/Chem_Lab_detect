@@ -14,6 +14,10 @@ from utils.draw_hand import draw_landmarks
 from utils.fps_caculator import FpsCalculator
 from utils.draw_fps import draw_fps
 
+# BUG: Incomplete detection_info
+# new mediapipe hand landmarker has no api to fetch hand detection/presence/visibility score
+# using handedness score as score. cannot provide keypoint confidence.
+
 class GestureDetector:
     def __init__(self, model_path='models/hand.task', num_hands=2, 
                  min_hand_detection_confidence=0.5, min_hand_presence_confidence=0.5, 
@@ -99,20 +103,20 @@ class GestureDetector:
                 landmark_point = []
                 for lm_idx, landmark in enumerate(hand_landmarks):
                     # 还原到原图尺寸
-                    x = round(landmark.x * pre_process.shape[1] / scale, 2)
-                    y = round(landmark.y * pre_process.shape[0] / scale, 2)
+                    x = int(round(landmark.x * pre_process.shape[1] / scale))
+                    y = int(round(landmark.y * pre_process.shape[0] / scale))
                     # 移除presence和visibility相关代码
                     keypoints.append({
                         "x": x,
                         "y": y,
                         "name": hand_landmark_names[lm_idx]
                     })
-                    landmark_point.append((int(x), int(y)))
+                    landmark_point.append((x, y))
                 # handedness
                 handedness = detection_result.handedness[hand_idx][0] if hasattr(detection_result, "handedness") else None
                 if handedness is not None:
                     chirality = "left" if handedness.index == 0 else "right"
-                    score = round(handedness.score, 1)
+                    score = round(handedness.score, 2)
                 else:
                     chirality = None
                     score = None
@@ -204,8 +208,8 @@ class GestureDetector:
         processed_frame, detection_info = self.detect_frame(img)
         cv2.imshow("Gesture Detection", processed_frame)
         cv2.waitKey(0)
-        cv2.imwrite("examples/results/eazy_hand.png", processed_frame)
-        print(detection_info)
+        # cv2.imwrite("examples/results/eazy_hand.png", processed_frame)
+        # print(detection_info)
 
 
 # 示例用法

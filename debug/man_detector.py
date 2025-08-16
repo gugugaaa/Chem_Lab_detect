@@ -71,12 +71,12 @@ class ManPoseDetector:
             if result.keypoints is not None and len(result.boxes) > 0:
                 for i in range(len(result.boxes)):
                     box = result.boxes[i]
-                    xyxy = [round(coord, 2) for coord in box.xyxy[0].tolist()]  # 获取第i个框的[x1, y1, x2, y2]，保留2位小数
-                    keypoints_xy = [[round(x, 2), round(y, 2)] for x, y in result.keypoints.xy[i].tolist()]  # 关键点坐标保留2位小数
+                    xyxy = [int(round(coord)) for coord in box.xyxy[0].tolist()]  # 获取第i个框的[x1, y1, x2, y2]，取整
+                    keypoints_xy = [[int(round(x)), int(round(y))] for x, y in result.keypoints.xy[i].tolist()]  # 关键点坐标取整
 
                     # 提取关键点信息
                     cls_id = int(box.cls.item())
-                    score = round(box.conf.item(), 1)
+                    score = round(box.conf.item(), 2)  # 置信度保留两位小数
                     label = self.model.names[cls_id]
                     keypoints_conf_data = result.keypoints.conf[i] if hasattr(result.keypoints, 'conf') and result.keypoints.conf is not None else None
                     keypoints_data = []
@@ -86,7 +86,7 @@ class ManPoseDetector:
                             keypoints_data.append({
                                 'x': xy[0],
                                 'y': xy[1],
-                                'confidence': round(conf.item(), 1),
+                                'confidence': round(conf.item(), 2),  # 置信度保留两位小数
                                 'name': name
                             })
                     else:

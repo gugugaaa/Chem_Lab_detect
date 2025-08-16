@@ -55,7 +55,7 @@ class VesselDetector:
             boxes = result.boxes
             for box in boxes:
                 cls_id = int(box.cls.item())
-                score = box.conf.item()
+                score = round(box.conf.item(), 2)  # 保留两位小数
                 label = self.model.names[cls_id]
                 x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
                 xyxy = [x1, y1, x2, y2]
@@ -128,6 +128,7 @@ class VesselDetector:
         processed_frame, detection_info = self.detect_frame(img, show_names=True)
         cv2.imshow("Pose Detection", processed_frame)   
         cv2.waitKey(0)
+        print(detection_info)
 
 # 示例用法
 if __name__ == "__main__":
