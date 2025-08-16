@@ -138,8 +138,9 @@ class WearingDetector:
         processed_frame, detection_info = self.detect_frame(img, show_names=True)
         cv2.imshow("Wearing Detection", processed_frame)   
         cv2.waitKey(0)
+        print(detection_info)
 
 # 示例用法
 if __name__ == "__main__":
     detector = WearingDetector()
-    detector.debug_image_predict("examples/wearing_test.png")
+    detector.debug_image_predict("examples/safety_test.png")

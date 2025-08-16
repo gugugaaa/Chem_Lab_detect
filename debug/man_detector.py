@@ -71,12 +71,12 @@ class ManPoseDetector:
             if result.keypoints is not None and len(result.boxes) > 0:
                 for i in range(len(result.boxes)):
                     box = result.boxes[i]
-                    xyxy = box.xyxy[0].tolist()  # 获取第i个框的[x1, y1, x2, y2]
-                    keypoints_xy = result.keypoints.xy[i].tolist()
+                    xyxy = [round(coord, 2) for coord in box.xyxy[0].tolist()]  # 获取第i个框的[x1, y1, x2, y2]，保留2位小数
+                    keypoints_xy = [[round(x, 2), round(y, 2)] for x, y in result.keypoints.xy[i].tolist()]  # 关键点坐标保留2位小数
 
                     # 提取关键点信息
                     cls_id = int(box.cls.item())
-                    score = box.conf.item()
+                    score = round(box.conf.item(), 1)
                     label = self.model.names[cls_id]
                     keypoints_conf_data = result.keypoints.conf[i] if hasattr(result.keypoints, 'conf') and result.keypoints.conf is not None else None
                     keypoints_data = []
@@ -86,7 +86,7 @@ class ManPoseDetector:
                             keypoints_data.append({
                                 'x': xy[0],
                                 'y': xy[1],
-                                'confidence': conf.item(),
+                                'confidence': round(conf.item(), 1),
                                 'name': name
                             })
                     else:
@@ -173,9 +173,10 @@ class ManPoseDetector:
             print(f"Error: Could not read image from {image_path}")
             return
         # 使用detect_frame方法
-        processed_frame, detection_info = self.detect_frame(img, show_names=True)
+        processed_frame, detection_info = self.detect_frame(img)
         cv2.imshow("Pose Detection", processed_frame)   
         cv2.waitKey(0)
+        print(detection_info)
 
 
 # 示例用法

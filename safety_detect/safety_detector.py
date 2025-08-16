@@ -60,19 +60,19 @@ class SafetyDetector:
             if result.keypoints is not None and len(result.boxes) > 0:
                 # 为了稳定，只处理第一个人
                 box = result.boxes[0]
-                xyxy = box.xyxy[0].tolist()
+                xyxy = [round(x, 2) for x in box.xyxy[0].tolist()]  # 保留2位小数
                 keypoints_xy = result.keypoints.xy[0].tolist()
                 cls_id = int(box.cls.item())
-                score = box.conf.item()
+                score = round(box.conf.item(), 1)  # 保留1位小数
                 label = self.man_model.names[cls_id]
                 keypoints_conf_data = result.keypoints.conf[0].tolist() if hasattr(result.keypoints, 'conf') and result.keypoints.conf is not None else [0.0] * len(keypoints_xy)
                 keypoints_data = []
                 for j, xy in enumerate(keypoints_xy):
                     name = man_keypoint_names[j] if j < len(man_keypoint_names) else f'keypoint_{j}'
                     keypoints_data.append({
-                        'x': xy[0],
-                        'y': xy[1],
-                        'confidence': keypoints_conf_data[j],
+                        'x': round(xy[0], 2),
+                        'y': round(xy[1], 2),
+                        'confidence': round(keypoints_conf_data[j], 1),
                         'name': name
                     })
                 pose_info = {
@@ -98,7 +98,7 @@ class SafetyDetector:
                 boxes = result.boxes
                 for box in boxes:
                     cls_id = int(box.cls.item())
-                    score = box.conf.item()
+                    score = round(box.conf.item(), 1)  # 保留1位小数
                     label = self.wearing_model.names[cls_id]
                     # 坐标全部转为int，防止OpenCV报错
                     xyxy = list(map(int, box.xyxy[0].tolist()))
@@ -201,7 +201,7 @@ class SafetyDetector:
         processed_frame, detection_info = self.detect_frame(img)
         cv2.imshow("Safety Detection", processed_frame)   
         cv2.waitKey(0)
-        cv2.imwrite("examples/results/safety_test.png", processed_frame)
+        # cv2.imwrite("examples/results/safety_test.png", processed_frame)
         print(detection_info)
 
 # 示例用法
