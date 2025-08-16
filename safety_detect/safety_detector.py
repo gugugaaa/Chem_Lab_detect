@@ -5,26 +5,15 @@ from ultralytics import YOLO
 
 # 添加项目根目录到路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.draw_keypoints import draw_keypoints
-from utils.draw_bbox import draw_boxes
 from utils.draw_fps import draw_fps
 from utils.fps_caculator import FpsCalculator
+from utils.draw_safety import draw_safety
 
 man_keypoint_names = [
     'nose', 'left_eye', 'right_eye', 'left_ear', 'right_ear',
     'left_shoulder', 'right_shoulder', 'left_elbow', 'right_elbow', 'left_wrist',
     'right_wrist', 'left_hip', 'right_hip', 'left_knee', 'right_knee',
     'left_ankle', 'right_ankle'
-]
-
-# 肉色-粉色渐变，左右对称（BGR顺序）
-man_keypoint_colors = [(189,224,255),(203,192,255),(203,192,255),(220,184,255),(220,184,255),(233,174,255),(233,174,255),(245,170,255),(245,170,255),(255,182,193),(255,182,193),(255,192,203),(255,192,203),(255,204,229),(255,204,229),(255,228,240),(255,228,240)]
-
-# BGR格式颜色
-wearing_bbox_colors = [
-    (255, 204, 153),  # 浅蓝色
-    (120, 180, 255),  # 肉色偏黄
-    (220, 230, 245),  # 米白色
 ]
 
 class SafetyDetector:
@@ -187,21 +176,16 @@ class SafetyDetector:
 
         # 绘制
         processed_frame = frame.copy()
-        if poses_info:
-            processed_frame = draw_keypoints(
-                processed_frame,
-                {'poses': poses_info},
-                keypoint_colors=man_keypoint_colors,
-                show_names=self.show_kpt_names,
-                draw_bbox=True
-            )
-        processed_frame = draw_boxes(
-            processed_frame,
-            {'bboxes': bboxes_info},
-            bbox_colors=wearing_bbox_colors,
-            show_names=False,
-            draw_bbox=True
+        
+        # 添加安全检测结果绘制
+        processed_frame = draw_safety(
+            processed_frame, 
+            detection_info, 
+            poses_info=poses_info,
+            show_status=True,
+            show_debug=True
         )
+        
         processed_frame = draw_fps(processed_frame, avg_fps)
 
         return processed_frame, detection_info
@@ -217,6 +201,7 @@ class SafetyDetector:
         processed_frame, detection_info = self.detect_frame(img)
         cv2.imshow("Safety Detection", processed_frame)   
         cv2.waitKey(0)
+        cv2.imwrite("examples/results/safety_test.png", processed_frame)
         print(detection_info)
 
 # 示例用法
