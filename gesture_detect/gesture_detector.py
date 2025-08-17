@@ -83,12 +83,10 @@ class GestureDetector:
             "pinky_dip",
             "pinky_tip"
         ]
-        # 预处理图像
-        pre_process, scale = self._pre_process_image(frame, 288)
-        # 转换BGR为RGB
-        rgb_frame = cv2.cvtColor(pre_process, cv2.COLOR_BGR2RGB)
-        # 转换为MediaPipe图像格式
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
+        # 预处理图像，to_rgb=True可以检测肉色/白色手套，蓝色手套应该使用False（BGR里面蓝色就是肉色）
+        pre_process, scale = self._pre_process_image(frame, 288, to_rgb=False)
+        # pre_process 已经是 RGB，无需再转换
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=pre_process)
         
         # 检测手势
         detection_result = self.detector.detect(mp_image)
@@ -138,15 +136,18 @@ class GestureDetector:
         }
         return processed_frame, detection_info
     
-    def _pre_process_image(self, image, imgsz=320):
+    def _pre_process_image(self, image, imgsz=320, to_rgb=True):
         """
         等比例缩放到长边==imgsz
+        然后变换到BGR空间，这样蓝色的手套就会被映射为肉色
+        可选是否输出RGB格式（适用于不同模型）
+        最后做高斯模糊
         Args:
-            image: 输入的BGR图像
-            imgsz: 缩放后长边的尺寸
+            image: 输入图像
+            imgsz: 缩放后长边尺寸
+            to_rgb: 是否输出RGB格式（否则为BGR）
         Returns:
-            resized_img: 缩放后的图像
-            scale: 缩放比例
+            处理后的图像, 缩放比例
         """
         h, w = image.shape[:2]
         if h > w:
@@ -158,7 +159,17 @@ class GestureDetector:
             new_w = imgsz
             new_h = int(h * scale)
         resized_img = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
-        return resized_img, scale
+        # 若不是BGR则转为BGR
+        if len(resized_img.shape) == 2 or resized_img.shape[2] == 1:
+            resized_img = cv2.cvtColor(resized_img, cv2.COLOR_GRAY2BGR)
+        # 高斯模糊
+        blurred_img = cv2.GaussianBlur(resized_img, (5, 5), 0)
+        # 可选转换为RGB
+        if to_rgb:
+            out_img = cv2.cvtColor(blurred_img, cv2.COLOR_BGR2RGB)
+        else:
+            out_img = blurred_img
+        return out_img, scale
 
     
     def process_video(self, video_source=0, display=True):
@@ -215,4 +226,4 @@ class GestureDetector:
 # 示例用法
 if __name__ == "__main__":
     detector = GestureDetector()
-    detector.debug_image_predict("examples/eazy_hand.png")
+    detector.debug_image_predict("examples/safety_test.png")

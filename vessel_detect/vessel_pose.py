@@ -3,6 +3,13 @@ import sys
 import os
 from ultralytics import YOLO
 
+"""
+TODO
+初始化加载三个模型： beaker.pt graduated_cylinder.pt volumetric_flask.pt
+然后在detect frame里面新增传入的vessel_type和vessel_bbox，
+对于frame先从bbox向外5像素裁切后，pad到纯黑背景输入到对应的模型；最后把结果绘制在一起
+"""
+
 # 添加项目根目录到路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.draw_keypoints import draw_keypoints
