@@ -209,5 +209,5 @@ class VesselCascadeDetector:
 
 # 示例用法
 if __name__ == "__main__":
-    detector = VesselCascadeDetector()
+    detector = VesselCascadeDetector(show_kpt_names=True)
     detector.debug_image_predict("examples/test/vessels_test.png")

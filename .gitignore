@@ -5,3 +5,4 @@ datasets/
 *.mp4
 playground/
 temp/
+mosaic.py
