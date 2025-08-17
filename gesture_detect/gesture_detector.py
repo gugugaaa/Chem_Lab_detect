@@ -226,4 +226,4 @@ class GestureDetector:
 # 示例用法
 if __name__ == "__main__":
     detector = GestureDetector()
-    detector.debug_image_predict("examples/safety_test.png")
+    detector.debug_image_predict("examples/test/safety_test.png")

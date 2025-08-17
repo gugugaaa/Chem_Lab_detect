@@ -1,214 +1,213 @@
+"""
+使用 models/vessel_box.pt 检测容器，针对每个box区域裁切后，zero padding为正方形，输入对应的pose模型（models/{box_label}.pt）推理关键点。
+- 只保留中心点在pure_img中心的检测结果，并还原关键点到原图坐标。
+- 关键点名称需根据模型字典顺序读取。
+- 其他逻辑与 man_detector.py 类似，yolo pose模型用法相同。
+"""
+
 import cv2
+import sys
+import os
 import numpy as np
-from vessel_detect.vessel_bbox import VesselDetector
-from vessel_detect.vessel_pose import VesselPoseDetector
-from utils.fps_caculator import FpsCalculator
-from utils.draw_fps import draw_fps
+from ultralytics import YOLO
+
+# 添加项目根目录到路径
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.draw_keypoints import draw_keypoints
+from utils.draw_fps import draw_fps
+from utils.fps_caculator import FpsCalculator
+
+# 各容器关键点名称
+beaker_kpt_names = ['tip', 'mouth_center', 'bottom_center']
+graduated_cylinder_kpt_names = ['tip', 'mouth_center', 'bottom_outer', 'top_quarter', 'bottom_quarter']
+volumetric_flask_kpt_names = ['bottom_center', 'mouth_center', 'stopper', 'scale_mark']
+
+# 紫罗兰-茄子色配色（BGR）
+vessel_keypoint_colors = [
+    (130, 76, 130),   # 紫罗兰 (Violet) BGR
+    (180, 82, 120),   # 茄子色 (Eggplant) BGR
+    (211, 160, 221),  # 淡紫色 (Thistle) BGR
+    (148, 87, 235),   # 紫色 (Purple) BGR
+    (204, 153, 255),  # 淡茄子 (Light Eggplant) BGR
+]
 
 class VesselCascadeDetector:
-    def __init__(
-        self, 
-        bbox_model_path=r"models\vessels-bbox-nano.pt",
-        pose_model_path=r"models\vessels-pose-nano.pt", 
-        bbox_conf=0.5,
-        pose_conf=0.7,
-        margin=5
-    ):
+    def __init__(self, vessel_box_model="models/vessel_box.pt", conf=0.5, show_kpt_names=False):
         """
-        初始化容器级联检测器
-        
-        Args:
-            bbox_model_path: 边界框检测模型路径
-            pose_model_path: 姿态检测模型路径
-            bbox_conf: 边界框检测置信度阈值
-            pose_conf: 姿态检测置信度阈值
-            margin: 裁剪边界框时的边距
+        初始化容器cascade检测器
         """
-        # 初始化两个检测器
-        self.bbox_detector = VesselDetector(model_path=bbox_model_path)
-        self.pose_detector = VesselPoseDetector(model_path=pose_model_path, conf=pose_conf)
-        self.margin = margin
+        self.vessel_box_model = YOLO(vessel_box_model, verbose=False)
+        self.conf = conf
+        self.show_kpt_names = show_kpt_names
         self.fps_calculator = FpsCalculator(buffer_len=100)
-    
+        # pose模型路径映射
+        self.pose_model_paths = {
+            'beaker': "models/beaker.pt",
+            'graduated_cylinder': "models/graduated_cylinder.pt",
+            'volumetric_flask': "models/volumetric_flask.pt"
+        }
+        self.pose_models = {}
+        for label, path in self.pose_model_paths.items():
+            if os.path.exists(path):
+                self.pose_models[label] = YOLO(path, verbose=False)
+        # 关键点名称映射
+        self.kpt_names_map = {
+            'beaker': beaker_kpt_names,
+            'graduated_cylinder': graduated_cylinder_kpt_names,
+            'volumetric_flask': volumetric_flask_kpt_names
+        }
+
     def __del__(self):
-        """析构函数，释放资源"""
-        if hasattr(self, 'bbox_detector'):
-            del self.bbox_detector
-        if hasattr(self, 'pose_detector'):
-            del self.pose_detector
-    
+        if hasattr(self, 'vessel_box_model'):
+            del self.vessel_box_model
+        for m in self.pose_models.values():
+            del m
+
+    def detect(self, frame):
+        """
+        检测图像中的容器及关键点
+        返回：原始检测结果
+        """
+        results = self.vessel_box_model.predict(frame, conf=self.conf, imgsz=224)
+        return results
+
+    def crop_and_pad_square(self, img, box, pad=5):
+        """
+        裁切box区域，向外pad像素，zero padding补成正方形
+        返回pure_img, xyxy_in_origin, pad_left, pad_top
+        """
+        h, w = img.shape[:2]
+        x1, y1, x2, y2 = [int(round(v)) for v in box]
+        x1p = max(x1 - pad, 0)
+        y1p = max(y1 - pad, 0)
+        x2p = min(x2 + pad, w)
+        y2p = min(y2 + pad, h)
+        crop = img[y1p:y2p, x1p:x2p]
+        ch, cw = crop.shape[:2]
+        side = max(ch, cw)
+        pad_top = (side - ch) // 2
+        pad_bottom = side - ch - pad_top
+        pad_left = (side - cw) // 2
+        pad_right = side - cw - pad_left
+        pure_img = cv2.copyMakeBorder(crop, pad_top, pad_bottom, pad_left, pad_right, cv2.BORDER_CONSTANT, value=0)
+        return pure_img, (x1p, y1p, x2p, y2p), pad_left, pad_top
+
     def detect_frame(self, frame):
         """
-        级联检测单帧图像
-        
-        Args:
-            frame: 输入的图像帧(BGR格式)
-            
-        Returns:
-            processed_frame: 处理后的帧(带有检测框和关键点)
-            cascade_info: 级联检测结果信息
+        检测单帧图像，返回处理后帧和检测信息
         """
-        # 步骤1: 进行边界框检测
-        _, bbox_info = self.bbox_detector.detect_frame(frame)
-        
-        # 复制一份用于绘制
+        vessel_results = self.detect(frame)
         processed_frame = frame.copy()
-        cascade_results = []
-        
-        # 步骤2: 处理每个检测到的容器
-        for detection in bbox_info['detections']:
-            # 获取边界框信息
-            bbox = detection['bounding_box']
-            x = bbox['origin_x']
-            y = bbox['origin_y']
-            w = bbox['width']
-            h = bbox['height']
-            
-            # 添加边距
-            x1 = max(0, x - self.margin)
-            y1 = max(0, y - self.margin)
-            x2 = min(frame.shape[1], x + w + self.margin)
-            y2 = min(frame.shape[0], y + h + self.margin)
-            
-            # 裁剪容器区域
-            cropped_region = frame[y1:y2, x1:x2]
-            
-            # 确保裁剪区域有效
-            if cropped_region.size > 0:
-                # 步骤3: 对裁剪区域进行姿态检测
-                results = self.pose_detector.detect(cropped_region)
-                
-                # 初始化姿态信息字典
-                pose_info = {'poses': []}
-                
-                # 处理检测结果
-                for result in results:
-                    if result.keypoints is not None:
-                        # 提取关键点信息
-                        keypoints_xy_data = result.keypoints.xy
-                        keypoints_conf_data = result.keypoints.conf if hasattr(result.keypoints, 'conf') else None
-                        
-                        # 准备绘制关键点所需的数据
-                        keypoints_list = []
-                        keypoint_conf_list = []
-                        classes_list = []
-                        box_conf_list = []
-                        
-                        for i in range(len(keypoints_xy_data)):
-                            if i < len(result.boxes.cls):
-                                cls_id = int(result.boxes.cls[i].item())
-                                score = result.boxes.conf[i].item()
-                                
-                                # 提取当前对象的关键点
-                                kpts = []
-                                confs = []
-                                
-                                # 将坐标从裁剪区域映射回原图
-                                for j, xy in enumerate(keypoints_xy_data[i]):
-                                    orig_x = xy[0].item() + x1
-                                    orig_y = xy[1].item() + y1
-                                    kpts.append([orig_x, orig_y])
-                                    
-                                    if keypoints_conf_data is not None:
-                                        confs.append(keypoints_conf_data[i][j].item())
-                                    else:
-                                        confs.append(1.0)
-                                
-                                # 收集处理后的数据
-                                keypoints_list.append(kpts)
-                                keypoint_conf_list.append(confs)
-                                classes_list.append(cls_id)
-                                box_conf_list.append(score)
-                                
-                                # 为每个检测到的物体构建关键点信息
-                                keypoints_data = []
-                                for j, (xy, conf) in enumerate(zip(kpts, confs)):
-                                    keypoints_data.append({
-                                        'x': xy[0],
-                                        'y': xy[1],
-                                        'confidence': conf,
-                                        'name': f'keypoint_{j}'
-                                    })
-                                
-                                # 添加到姿态信息中
-                                pose_info['poses'].append({
-                                    'class_id': cls_id,
-                                    'label': self.pose_detector.model.names[cls_id],
-                                    'score': score,
-                                    'keypoints': keypoints_data
-                                })
-                        
-                        # 在原图上绘制关键点
-                        if keypoints_list:
-                            processed_frame = draw_keypoints(
-                                processed_frame,
-                                np.array(keypoints_list),
-                                np.array(keypoint_conf_list),
-                                np.array(classes_list),
-                                np.array(box_conf_list)
-                            )
-                
-                # 收集检测信息
-                result = {
-                    'bbox': {
-                        'x1': x1, 'y1': y1, 'x2': x2, 'y2': y2,
-                        'category': detection['categories'][0]['category_name'],
-                        'score': detection['categories'][0]['score']
-                    },
-                    'pose': pose_info
-                }
-                cascade_results.append(result)
-        
-        # 计算FPS并显示
+        poses_info = []
+
+        for result in vessel_results:
+            if result.boxes is not None and len(result.boxes) > 0:
+                for i in range(len(result.boxes)):
+                    box = result.boxes[i]
+                    xyxy = [int(round(coord)) for coord in box.xyxy[0].tolist()]
+                    cls_id = int(box.cls.item())
+                    score = round(box.conf.item(), 2)
+                    label = self.vessel_box_model.names[cls_id]
+                    # 裁切pure_img
+                    pure_img, (x1p, y1p, x2p, y2p), pad_left, pad_top = self.crop_and_pad_square(frame, xyxy, pad=5)
+                    # 级联pose模型
+                    pose_model = self.pose_models.get(label)
+                    kpt_names = self.kpt_names_map.get(label, [])
+                    if pose_model is None or not kpt_names:
+                        continue
+                    pose_results = pose_model.predict(pure_img, conf=self.conf, imgsz=224)
+                    # 只保留中心点在pure_img中心附近的检测
+                    side = pure_img.shape[0]
+                    cx_c, cy_c = side // 2, side // 2
+                    valid_idx = -1
+                    for j, pres in enumerate(pose_results):
+                        if pres.boxes is not None and len(pres.boxes) > 0:
+                            for k in range(len(pres.boxes)):
+                                kbox = pres.boxes[k]
+                                kxywh = kbox.xywh[0].tolist()
+                                kcx, kcy = int(round(kxywh[0])), int(round(kxywh[1]))
+                                # 允许中心点在中心±5%区域
+                                if abs(kcx - cx_c) < side * 0.05 and abs(kcy - cy_c) < side * 0.05:
+                                    valid_idx = k
+                                    break
+                        if valid_idx != -1:
+                            break
+                    if valid_idx == -1:
+                        continue
+                    pres = pose_results[0]
+                    # 还原关键点坐标到原图
+                    keypoints_xy = [[int(round(x)), int(round(y))] for x, y in pres.keypoints.xy[valid_idx].tolist()]
+                    keypoints_conf_data = pres.keypoints.conf[valid_idx] if hasattr(pres.keypoints, 'conf') and pres.keypoints.conf is not None else None
+                    keypoints_data = []
+                    for j, xy in enumerate(keypoints_xy):
+                        # 还原到原图
+                        x_img = xy[0] - pad_left + x1p
+                        y_img = xy[1] - pad_top + y1p
+                        name = kpt_names[j] if j < len(kpt_names) else f'keypoint_{j}'
+                        conf = round(keypoints_conf_data[j].item(), 2) if keypoints_conf_data is not None else None
+                        keypoints_data.append({
+                            'x': x_img,
+                            'y': y_img,
+                            'confidence': conf,
+                            'name': name
+                        })
+                    pose_info = {
+                        'class_id': cls_id,
+                        'label': label,
+                        'score': score,
+                        'box': xyxy,
+                        'keypoints': keypoints_data
+                    }
+                    poses_info.append(pose_info)
+
         avg_fps = self.fps_calculator.get()
         processed_frame = draw_fps(processed_frame, avg_fps)
-        
-        # 返回处理后的帧和检测信息
-        cascade_info = {
-            'results': cascade_results,
-            'fps': avg_fps,
-            'bbox_detected_labels': bbox_info['detected_labels']
+        detection_info = {
+            'poses': poses_info,
+            'fps': avg_fps
         }
-        
-        return processed_frame, cascade_info
-    
+        processed_frame = draw_keypoints(
+            processed_frame,
+            detection_info,
+            keypoint_colors=vessel_keypoint_colors,
+            show_names=self.show_kpt_names,
+            draw_bbox=True
+        )
+        return processed_frame, detection_info
+
     def process_video(self, video_source=0, display=True):
-        """
-        级联处理视频流
-        
-        Args:
-            video_source: 视频源，可以是摄像头索引或视频文件路径
-            display: 是否显示处理结果
-            
-        Returns:
-            None
-        """
         cap = cv2.VideoCapture(video_source)
-        
         if not cap.isOpened():
             print("Error: Could not open video source.")
             return
-            
         try:
             while cap.isOpened():
                 ret, frame = cap.read()
                 if not ret:
                     break
-                
-                processed_frame, cascade_info = self.detect_frame(frame)
-                
+                processed_frame, detection_info = self.detect_frame(frame)
                 if display:
                     cv2.imshow("Vessel Cascade Detection", processed_frame)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):  # 按q退出
+                    if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
-                        
         finally:
             cap.release()
             if display:
                 cv2.destroyAllWindows()
 
+    def debug_image_predict(self, image_path):
+        img = cv2.imread(image_path)
+        if img is None:
+            print(f"Error: Could not read image from {image_path}")
+            return
+        processed_frame, detection_info = self.detect_frame(img)
+        cv2.imshow("Vessel Cascade Detection", processed_frame)
+        cv2.waitKey(0)
+        # cv2.imwrite("examples/results/vessel_pose_test.png", processed_frame)
+        print(detection_info)
+
+
 # 示例用法
 if __name__ == "__main__":
-    cascade_detector = VesselCascadeDetector()
-    cascade_detector.process_video(0)  # 使用摄像头索引0
+    detector = VesselCascadeDetector()
+    detector.debug_image_predict("examples/test/vessels_test.png")

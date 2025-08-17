@@ -183,4 +183,4 @@ class ManPoseDetector:
 if __name__ == "__main__":
     detector = ManPoseDetector()
     # 示例：请替换为你的图片路径
-    detector.debug_image_predict("examples/safety_test.png")
+    detector.debug_image_predict("examples/test/safety_test.png")

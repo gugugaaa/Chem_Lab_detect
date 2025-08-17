@@ -81,7 +81,7 @@
 
 ## vessel_detect
 
-### vessel_detector.py
+### vessel_bbox.py
 
 {
   'bboxes': [
@@ -93,10 +93,28 @@
     },
     {
       'class_id': 0,
-      'label': 'graduated cylinder',
+      'label': 'graduated_cylinder',
       'score': 0.91,
       'box': [322, 79, 453, 512]
     }
   ],
+  'fps': 0.33
+}
+
+### vessel_cascade_detector.py
+
+{
+  'vessels': [
+    {
+      'class_id': 1,
+      'label': 'beaker',
+      'score': 0.95,
+      'box': [136, 215, 299, 435],
+      'keypoints': [
+        {'x': 192, 'y': 94, 'confidence': 0.88, 'name': 'tip'},
+        ...
+      ],
+    },
+    ...]
   'fps': 0.33
 }

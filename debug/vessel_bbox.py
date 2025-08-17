@@ -126,11 +126,12 @@ class VesselDetector:
             return
         # 使用detect_frame方法
         processed_frame, detection_info = self.detect_frame(img, show_names=True)
-        cv2.imshow("Pose Detection", processed_frame)   
+        cv2.imshow("BBox Detection", processed_frame)   
         cv2.waitKey(0)
+        # cv2.imwrite("examples/results/vessel_bbox_test.png", processed_frame)
         print(detection_info)
 
 # 示例用法
 if __name__ == "__main__":
     detector = VesselDetector()
-    detector.debug_image_predict("examples/vessels_test.png")
+    detector.debug_image_predict("examples/test/vessels_test.png")

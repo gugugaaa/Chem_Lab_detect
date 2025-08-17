@@ -45,7 +45,7 @@ def draw_keypoints(
             cv2.rectangle(img, (x1, y1), (x2, y2), bbox_color, 2)
             
             # 在边界框上方显示标签信息
-            label = f"{pose.get('label', 'person')} {pose.get('score', 0):.2f}"
+            label = f"{pose.get('label', 'object')} {pose.get('score', 0):.2f}"
             label_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)[0]
             cv2.rectangle(img, (x1, y1 - label_size[1] - 10), 
                          (x1 + label_size[0], y1), bbox_color, -1)
