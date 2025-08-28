@@ -5,7 +5,7 @@ import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.draw_bbox import draw_boxes
 from utils.draw_fps import draw_fps
-from utils.fps_caculator import FpsCalculator
+from utils.fps_calculator import FpsCalculator
 
 """
 识别结果：

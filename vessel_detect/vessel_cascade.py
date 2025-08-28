@@ -15,7 +15,7 @@ from ultralytics import YOLO
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.draw_keypoints import draw_keypoints
 from utils.draw_fps import draw_fps
-from utils.fps_caculator import FpsCalculator
+from utils.fps_calculator import FpsCalculator
 
 # 各容器关键点名称
 beaker_kpt_names = ['tip', 'mouth_center', 'bottom_center']

@@ -6,7 +6,7 @@ from ultralytics import YOLO
 # 添加项目根目录到路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.draw_fps import draw_fps
-from utils.fps_caculator import FpsCalculator
+from utils.fps_calculator import FpsCalculator
 from utils.draw_safety import draw_safety
 
 man_keypoint_names = [

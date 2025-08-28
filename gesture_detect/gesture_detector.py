@@ -11,7 +11,7 @@ from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
 from utils.draw_hand import draw_landmarks
-from utils.fps_caculator import FpsCalculator
+from utils.fps_calculator import FpsCalculator
 from utils.draw_fps import draw_fps
 
 # BUG: Incomplete detection_info

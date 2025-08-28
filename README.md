@@ -1,6 +1,8 @@
-<div style="max-width:300px; font-family:Arial, sans-serif;">
+<div style="font-family:Arial, sans-serif;">
 
 <h1>Chemistry Lab Detection System 🔬</h1>
+
+<a href="https://wakatime.com/badge/user/9af6799e-0454-4009-b789-fb07d1e221c3/project/b2a58f2a-facb-4d07-b388-e3dd5966933d"><img src="https://wakatime.com/badge/user/9af6799e-0454-4009-b789-fb07d1e221c3/project/b2a58f2a-facb-4d07-b388-e3dd5966933d.svg" alt="wakatime"></a>
 
 <p>
 A computer vision system for real-time detection and analysis of laboratory vessels and equipment.
