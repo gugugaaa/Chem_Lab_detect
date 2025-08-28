@@ -7,6 +7,8 @@
 
 ### wearing_detector.py
 
+> 'box' are all in 'xyxy' form
+
 {
   'bboxes': [
     {
@@ -65,6 +67,7 @@
     {
       'chirality': 'left/right',
       'score': 0.91,
+      'box': [136, 215, 299, 435],
       'keypoints': [
         {'x': 192, 'y': 94, 'name': 'nose'},
         ...

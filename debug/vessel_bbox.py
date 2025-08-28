@@ -46,7 +46,7 @@ class VesselDetector:
             detection_info: 检测结果信息
         """
         # 进行物体检测
-        results = self.model.predict(frame, imgsz=224)
+        results = self.model.predict(frame, imgsz=320)
 
         bboxes_info = []
 
@@ -134,4 +134,4 @@ class VesselDetector:
 # 示例用法
 if __name__ == "__main__":
     detector = VesselDetector()
-    detector.debug_image_predict("examples/test/vessels_test.png")
+    detector.debug_image_predict("examples/test/gesture_test.jpg")

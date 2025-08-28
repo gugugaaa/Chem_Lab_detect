@@ -99,10 +99,17 @@ class GestureDetector:
             for hand_idx, hand_landmarks in enumerate(detection_result.hand_landmarks):
                 keypoints = []
                 landmark_point = []
+                # 用于计算包围盒的坐标列表
+                x_coords = []
+                y_coords = []
+                
                 for lm_idx, landmark in enumerate(hand_landmarks):
                     # 还原到原图尺寸
                     x = int(round(landmark.x * pre_process.shape[1] / scale))
                     y = int(round(landmark.y * pre_process.shape[0] / scale))
+                    # 收集坐标用于计算包围盒
+                    x_coords.append(x)
+                    y_coords.append(y)
                     # 移除presence和visibility相关代码
                     keypoints.append({
                         "x": x,
@@ -110,6 +117,12 @@ class GestureDetector:
                         "name": hand_landmark_names[lm_idx]
                     })
                     landmark_point.append((x, y))
+                
+                # 计算包围盒
+                x1, x2 = min(x_coords), max(x_coords)
+                y1, y2 = min(y_coords), max(y_coords)
+                box = [x1, y1, x2, y2]
+                
                 # handedness
                 handedness = detection_result.handedness[hand_idx][0] if hasattr(detection_result, "handedness") else None
                 if handedness is not None:
@@ -121,7 +134,8 @@ class GestureDetector:
                 hands_info.append({
                     "chirality": chirality,
                     "score": score,
-                    "keypoints": keypoints
+                    "keypoints": keypoints,
+                    "box": box
                 })
                 # 绘制关键点（在原图尺寸上）
                 processed_frame = draw_landmarks(processed_frame, landmark_point)

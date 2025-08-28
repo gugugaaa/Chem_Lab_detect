@@ -68,7 +68,7 @@ class VesselCascadeDetector:
         检测图像中的容器及关键点
         返回：原始检测结果
         """
-        results = self.vessel_box_model.predict(frame, conf=self.conf, imgsz=224)
+        results = self.vessel_box_model.predict(frame, conf=self.conf, imgsz=320)
         return results
 
     def crop_and_pad_square(self, img, box, pad=5):
@@ -115,7 +115,7 @@ class VesselCascadeDetector:
                     kpt_names = self.kpt_names_map.get(label, [])
                     if pose_model is None or not kpt_names:
                         continue
-                    pose_results = pose_model.predict(pure_img, conf=self.conf, imgsz=224)
+                    pose_results = pose_model.predict(pure_img, conf=self.conf, imgsz=320)
                     # 只保留中心点在pure_img中心附近的检测
                     side = pure_img.shape[0]
                     cx_c, cy_c = side // 2, side // 2
@@ -210,4 +210,4 @@ class VesselCascadeDetector:
 # 示例用法
 if __name__ == "__main__":
     detector = VesselCascadeDetector(show_kpt_names=True)
-    detector.debug_image_predict("examples/test/vessels_test.png")
+    detector.debug_image_predict("examples/test/gesture_test.jpg")

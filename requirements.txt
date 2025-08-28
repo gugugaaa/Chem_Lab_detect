@@ -2,3 +2,5 @@ torch
 opencv-python
 ultralytics
 mediapipe
+scikit-learn
+xgboost
