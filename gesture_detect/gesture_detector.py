@@ -20,7 +20,7 @@ from utils.draw_fps import draw_fps
 
 class GestureDetector:
     def __init__(self, model_path='models/hand.task', num_hands=2, 
-                 min_hand_detection_confidence=0.5, min_hand_presence_confidence=0.5, 
+                 min_hand_detection_confidence=0.3, min_hand_presence_confidence=0.5, 
                  min_tracking_confidence=0.5):
         """
         初始化手势检测器
@@ -84,7 +84,7 @@ class GestureDetector:
             "pinky_tip"
         ]
         # 预处理图像，to_rgb=True可以检测肉色/白色手套，蓝色手套应该使用False（BGR里面蓝色就是肉色）
-        pre_process, scale = self._pre_process_image(frame, 288, to_rgb=False)
+        pre_process, scale = self._pre_process_image(frame, 320, to_rgb=False)
         # pre_process 已经是 RGB，无需再转换
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=pre_process)
         
@@ -234,10 +234,10 @@ class GestureDetector:
         cv2.imshow("Gesture Detection", processed_frame)
         cv2.waitKey(0)
         # cv2.imwrite("examples/results/eazy_hand.png", processed_frame)
-        # print(detection_info)
+        print(detection_info)
 
 
 # 示例用法
 if __name__ == "__main__":
     detector = GestureDetector()
-    detector.debug_image_predict("examples/test/safety_test.png")
+    detector.debug_image_predict("examples/test/score_test_2.jpg")

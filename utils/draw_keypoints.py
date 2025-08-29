@@ -59,31 +59,29 @@ def draw_keypoints(
             confidence = kpt.get('confidence', None)
             name = kpt.get('name', f'kpt_{j}')
             
-            # 只绘制置信度大于0.5的关键点，如果没有置信度信息则都绘制
-            if confidence is None or confidence > 0.5:
-                # 选择关键点颜色
-                if keypoint_colors is not None and j < len(keypoint_colors):
-                    color = keypoint_colors[j]
-                else:
-                    color = default_color
-                
-                # 绘制关键点
-                cv2.circle(img, (int(x), int(y)), 5, color, -1)
-                
-                # 可选：在关键点旁边绘制名称
-                if show_names:
-                    # 文本位置，稍微右上偏移，避免覆盖圆点
-                    text_x = int(x) + 6
-                    text_y = int(y) - 6
-                    font = cv2.FONT_HERSHEY_SIMPLEX
-                    font_scale = 0.4
-                    thickness = 1
-                    # 计算文本尺寸并绘制填充矩形作为背景
-                    (text_w, text_h), baseline = cv2.getTextSize(name, font, font_scale, thickness)
-                    rect_tl = (text_x - 2, text_y - text_h - 2)
-                    rect_br = (text_x + text_w + 2, text_y + baseline + 2)
-                    cv2.rectangle(img, rect_tl, rect_br, name_bg_color, -1)
-                    cv2.putText(img, name, (text_x, text_y), font,
-                                font_scale, name_color, thickness, cv2.LINE_AA)
+            # 选择关键点颜色
+            if keypoint_colors is not None and j < len(keypoint_colors):
+                color = keypoint_colors[j]
+            else:
+                color = default_color
+            
+            # 绘制关键点
+            cv2.circle(img, (int(x), int(y)), 5, color, -1)
+            
+            # 可选：在关键点旁边绘制名称
+            if show_names:
+                # 文本位置，稍微右上偏移，避免覆盖圆点
+                text_x = int(x) + 6
+                text_y = int(y) - 6
+                font = cv2.FONT_HERSHEY_SIMPLEX
+                font_scale = 0.4
+                thickness = 1
+                # 计算文本尺寸并绘制填充矩形作为背景
+                (text_w, text_h), baseline = cv2.getTextSize(name, font, font_scale, thickness)
+                rect_tl = (text_x - 2, text_y - text_h - 2)
+                rect_br = (text_x + text_w + 2, text_y + baseline + 2)
+                cv2.rectangle(img, rect_tl, rect_br, name_bg_color, -1)
+                cv2.putText(img, name, (text_x, text_y), font,
+                            font_scale, name_color, thickness, cv2.LINE_AA)
     
     return img

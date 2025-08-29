@@ -28,5 +28,5 @@ Chem_Lab_detect/
 ![Safety detection result](examples/results/safety_test.png)
 _Safety detection result example_
 
-![Vessel pose detection result](examples/results/vessel_pose_test.png)
+![Vessel pose detection result](examples/results/scorer_test.png)
 _Vessel pose detection result example_

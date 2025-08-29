@@ -71,33 +71,31 @@ class ActionScorer:
 
     def score_frame(self, vessel_info, gesture_info):
         """
-        对单帧的检测结果进行评分，并返回极简统一格式。
+        对单帧的检测结果进行评分，仅考虑单人双手操作，直接返回操作名和分数。
 
         Args:
             vessel_info (dict): 来自VesselCascadeDetector的检测结果。
             gesture_info (dict): 来自GestureDetector的检测结果。
 
         Returns:
-            list[dict]: 每项为 {"operation": "beaker+graduated_cylinder", "score": 95.5}
-                        若无有效操作，返回空列表 []
+            dict: {"operation": "beaker+graduated_cylinder", "score": 95.5}
+                  若无有效操作，返回 None
         """
         hands = gesture_info.get('hands', [])
         vessels = vessel_info.get('poses', [])
         
-        if len(vessels) < 2 or not hands:
-            return []
+        if len(vessels) < 2 or len(hands) != 2:
+            return None
 
         # 1. 匹配手和最近的仪器
         matched_hands = self._match_hands_to_vessels(hands, vessels)
+        if len(matched_hands) != 2:
+            return None
 
-        # 2. 识别操作组合并评分
-        scores = self._score_interactions(matched_hands, vessels)
+        # 2. 直接评分单个操作
+        result = self._score_single_operation(matched_hands)
         
-        # 统一极简包装
-        result = [
-            {"operation": "+".join(labels), "score": score}
-            for labels, score in scores.items()
-        ]
+        print(f"Scoring result: {result}")
         return result
 
     def _get_box_center(self, box):
@@ -124,31 +122,28 @@ class ActionScorer:
         
         return matched_hands
 
-    def _score_interactions(self, matched_hands, all_vessels):
-        """根据手的匹配结果，对所有可能的仪器组合进行评分。"""
-        scores = {}
+    def _score_single_operation(self, matched_hands):
+        """根据匹配的双手评分单个操作。"""
+        vessel1 = matched_hands[0]['matched_vessel']
+        vessel2 = matched_hands[1]['matched_vessel']
+
+        # 确保两个仪器不是同一个
+        if vessel1 is vessel2:
+            return None
+
+        labels = tuple(sorted((vessel1['label'], vessel2['label'])))
         
-        # 只考虑两只手的情况
-        if len(matched_hands) == 2:
-            vessel1 = matched_hands[0]['matched_vessel']
-            vessel2 = matched_hands[1]['matched_vessel']
+        if labels not in self.scorers:
+            return None
 
-            # 确保两个仪器不是同一个
-            if vessel1 is vessel2:
-                return {}
-
-            labels = tuple(sorted((vessel1['label'], vessel2['label'])))
-            
-            if labels in self.scorers:
-                model = self.scorers[labels]
-                # 确保vessel1/vessel2的顺序与模型训练时一致
-                ordered_vessels = (vessel1, vessel2) if vessel1['label'] == labels[0] else (vessel2, vessel1)
-                
-                feature_vector = self.feature_extractor.extract(vessel1, vessel2, matched_hands)
-
-                input_data = np.array(feature_vector).reshape(1, -1)
-                pred_proba = model.predict_proba(input_data)
-                confidence = pred_proba[0][1] * 100  # 取类别为1的概率
-                scores[labels] = round(confidence, 2)
-
-        return scores
+        model = self.scorers[labels]
+        
+        feature_vector = self.feature_extractor.extract(vessel1, vessel2, matched_hands)
+        input_data = np.array(feature_vector).reshape(1, -1)
+        pred_proba = model.predict_proba(input_data)
+        confidence = pred_proba[0][1] * 100  # 取类别为1的概率
+        
+        return {
+            "operation": "+".join(labels), 
+            "score": round(confidence, 1)
+        }

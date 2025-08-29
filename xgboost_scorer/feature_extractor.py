@@ -75,7 +75,7 @@ class FeatureExtractor:
         kps_data = vessel_info['keypoints']
         xy = np.array([[kp['x'], kp['y']] for kp in kps_data])
         # 如果没有置信度信息，则假设全部可见
-        conf = np.array([kp.get('confidence', 1.0) for kp in kps_data])
+        conf = np.array([kp['confidence'] if kp.get('confidence') is not None else 1.0 for kp in kps_data])
         return {'xy': xy, 'conf': conf}
 
     def extract(self, vessel1_info, vessel2_info, hands_info):

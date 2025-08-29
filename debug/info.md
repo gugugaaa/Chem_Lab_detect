@@ -1,6 +1,6 @@
 # 各检测器的detect_frame输出
 
-更新于2025/8/16  
+更新于2025/8/29  
 现在fps在debug模式下有些计算错误，请忽略
 
 ## safety_detect/
@@ -121,13 +121,12 @@
     ...]
   'fps': 0.33
 }
+> 注意：YOLO关键点检测模型的keypoint confidence字段可能为None，需在后处理时兼容。
 ## xgboost_scorer/
 
 ### action_scorer.py
 
-[
   {
     "operation": "beaker+graduated_cylinder",
     "score": 95.5
   }
-]
