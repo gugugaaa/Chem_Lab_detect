@@ -71,20 +71,21 @@ class ActionScorer:
 
     def score_frame(self, vessel_info, gesture_info):
         """
-        对单帧的检测结果进行评分。
+        对单帧的检测结果进行评分，并返回极简统一格式。
 
         Args:
             vessel_info (dict): 来自VesselCascadeDetector的检测结果。
             gesture_info (dict): 来自GestureDetector的检测结果。
 
         Returns:
-            dict: 包含操作类型和对应分数的字典, e.g., {('beaker', 'graduated_cylinder'): 95.5}
+            list[dict]: 每项为 {"operation": "beaker+graduated_cylinder", "score": 95.5}
+                        若无有效操作，返回空列表 []
         """
         hands = gesture_info.get('hands', [])
         vessels = vessel_info.get('poses', [])
         
         if len(vessels) < 2 or not hands:
-            return {}
+            return []
 
         # 1. 匹配手和最近的仪器
         matched_hands = self._match_hands_to_vessels(hands, vessels)
@@ -92,7 +93,12 @@ class ActionScorer:
         # 2. 识别操作组合并评分
         scores = self._score_interactions(matched_hands, vessels)
         
-        return scores
+        # 统一极简包装
+        result = [
+            {"operation": "+".join(labels), "score": score}
+            for labels, score in scores.items()
+        ]
+        return result
 
     def _get_box_center(self, box):
         """计算边界框的中心点。"""

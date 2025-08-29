@@ -121,3 +121,13 @@
     ...]
   'fps': 0.33
 }
+## xgboost_scorer/
+
+### action_scorer.py
+
+[
+  {
+    "operation": "beaker+graduated_cylinder",
+    "score": 95.5
+  }
+]

@@ -1,45 +1,32 @@
-<div style="font-family:Arial, sans-serif;">
+# Chemistry Lab Detection System 🔬
 
-<h1>Chemistry Lab Detection System 🔬</h1>
+[![wakatime](https://wakatime.com/badge/user/9af6799e-0454-4009-b789-fb07d1e221c3/project/b2a58f2a-facb-4d07-b388-e3dd5966933d.svg)](https://wakatime.com/badge/user/9af6799e-0454-4009-b789-fb07d1e221c3/project/b2a58f2a-facb-4d07-b388-e3dd5966933d)
 
-<a href="https://wakatime.com/badge/user/9af6799e-0454-4009-b789-fb07d1e221c3/project/b2a58f2a-facb-4d07-b388-e3dd5966933d"><img src="https://wakatime.com/badge/user/9af6799e-0454-4009-b789-fb07d1e221c3/project/b2a58f2a-facb-4d07-b388-e3dd5966933d.svg" alt="wakatime"></a>
-
-<p>
 A computer vision system for real-time detection and analysis of laboratory vessels and equipment.
-</p>
 
-<h2>Project Overview ✨</h2>
+## Project Overview ✨
 
-<p>
-This project employs a cascade detection approach to identify laboratory vessels and determine their pose/orientation. The system utilizes <b>two-stage detection</b>:
-<ol>
-  <li>First detecting the vessel's boundary box</li>
-  <li>Then analyzing the vessel's precise pose and orientation</li>
-</ol>
-</p>
+This project employs a cascade detection approach to identify laboratory vessels and determine their pose/orientation. The system utilizes **two-stage detection**:
+1. First detecting the vessel's boundary box
+2. Then analyzing the vessel's precise pose and orientation
 
-<h2>Project Structure 📁</h2>
+## Project Structure 📁
 
-<pre style="font-size:13px;">
+```
 Chem_Lab_detect/
 ├── models/                  # Trained ML models
 ├── safety_detect/           # Safety detection (glove/naked_hand, lab_coat)
 ├── vessel_detect/           # Vessel detection (vessel_bbox, vessel_cascade)
-├── chem_lab_agent/          # LLM agent for chemical lab operations (Q&amp;A)
+├── xgboost_scorer/          # Action scoring (action scorer)
+├── chem_lab_agent/          # LLM agent for chemical lab operations (Q&A)
 ├── utils/                   # Utility functions (drawing)
 └── examples/                # Examples to debug on
-</pre>
+```
 
-<h2>Results Display 🎉</h2>
+## Results Display 🎉
 
-<div style="margin-bottom:10px;">
-  <img src="examples/results/safety_test.png" alt="Safety detection result" style="width:100%; max-width:300px; border:1px solid #ccc;">
-  <div style="font-size:12px; color:#555;">Safety detection result example</div>
-</div>
+![Safety detection result](examples/results/safety_test.png)
+_Safety detection result example_
 
-<div>
-  <img src="examples/results/vessel_pose_test.png" alt="Vessel pose detection result" style="width:100%; max-width:300px; border:1px solid #ccc;">
-  <div style="font-size:12px; color:#555;">Vessel pose detection result example</div>
-</div>
-
-</div>
+![Vessel pose detection result](examples/results/vessel_pose_test.png)
+_Vessel pose detection result example_
