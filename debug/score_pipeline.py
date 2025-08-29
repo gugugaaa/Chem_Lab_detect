@@ -8,6 +8,14 @@ from xgboost_scorer.action_scorer import ActionScorer
 from utils.draw_keypoints import draw_keypoints
 from utils.draw_hand import draw_landmarks
 
+vessel_keypoint_colors = [
+    (130, 76, 130),   # 紫罗兰 (Violet) BGR
+    (180, 82, 120),   # 茄子色 (Eggplant) BGR
+    (211, 160, 221),  # 淡紫色 (Thistle) BGR
+    (148, 87, 235),   # 紫色 (Purple) BGR
+    (204, 153, 255),  # 淡茄子 (Light Eggplant) BGR
+]
+
 class ScorerPipeline:
     def __init__(self):
         self.vessel_detector = VesselCascadeDetector()
@@ -28,7 +36,7 @@ class ScorerPipeline:
         if vessel_info.get("poses") and gesture_info.get("hands"):
             score_result = self.action_scorer.score_frame(vessel_info, gesture_info)
         # 4. 绘制容器关键点
-        vis_frame = draw_keypoints(frame, vessel_info, show_names=True, draw_bbox=True)
+        vis_frame = draw_keypoints(frame, vessel_info, show_names=False, keypoint_colors=vessel_keypoint_colors, draw_bbox=True)
         # 5. 绘制手部关键点
         for hand in gesture_info.get("hands", []):
             points = [(kpt["x"], kpt["y"]) for kpt in hand.get("keypoints", [])]
@@ -51,6 +59,6 @@ if __name__ == "__main__":
     vis_frame, result = pipeline.detect_frame(img)
     print(result)
     cv2.imshow("Result", vis_frame)
-    cv2.imwrite("examples/results/scorer_test.png", vis_frame)
+    # cv2.imwrite("examples/results/scorer_test.png", vis_frame)
     cv2.waitKey(0)
     cv2.destroyAllWindows()

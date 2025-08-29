@@ -81,41 +81,6 @@ class VesselDetector:
 
         return processed_frame, detection_info
     
-    def process_video(self, video_source=0, display=True):
-        """
-        处理视频流
-        
-        Args:
-            video_source: 视频源，可以是摄像头索引或视频文件路径
-            display: 是否显示处理结果
-            
-        Returns:
-            None
-        """
-        cap = cv2.VideoCapture(video_source)
-        
-        if not cap.isOpened():
-            print("Error: Could not open video source.")
-            return
-            
-        try:
-            while cap.isOpened():
-                ret, frame = cap.read()
-                if not ret:
-                    break
-                
-                processed_frame, detection_info = self.detect_frame(frame)
-                
-                if display:
-                    cv2.imshow("Vessel Detection", processed_frame)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):  # 按q退出
-                        break
-                        
-        finally:
-            cap.release()
-            if display:
-                cv2.destroyAllWindows()
-
     def debug_image_predict(self, image_path):
         """
         临时debug方法：读取一张图片

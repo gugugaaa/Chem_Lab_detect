@@ -204,11 +204,11 @@ class VesselCascadeDetector:
         processed_frame, detection_info = self.detect_frame(img)
         cv2.imshow("Vessel Cascade Detection", processed_frame)
         cv2.waitKey(0)
-        # cv2.imwrite("examples/results/vessel_pose_test.png", processed_frame)
+        cv2.imwrite("examples/test/temp/beaker.png", processed_frame)
         print(detection_info)
 
 
 # 示例用法
 if __name__ == "__main__":
     detector = VesselCascadeDetector(show_kpt_names=True)
-    detector.debug_image_predict("examples/test/test_1.jpg")
+    detector.debug_image_predict("examples/test/temp/image3.png")
