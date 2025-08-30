@@ -42,8 +42,18 @@ Chem_Lab_detect/
 <img src="examples/results/safety_test.png" alt="Safety detection result" width="300" />
 <p><em>Safety detection result example</em></p>
 
-<img src="examples/results/vessel_test.png" alt="Vessel keypoints detection result" width="400" />
-<p><em>Vessel keypoints detection result example</em></p>
+<img src="examples/results/vessel_test.png" alt="Vessel keypoints" width="400" />
+<p><em>Vessel keypoints definition</em></p>
 
 <img src="examples/results/scorer_test.png" alt="Action score result" width="300" />
 <p><em>Action score result example</em></p>
+
+## Implement 🛠️
+
+<img src="https://raw.githubusercontent.com/gugugaaa/Chem_Lab_detect/refs/heads/react-gui/debug/ui_design.png" alt="UI design" width="300" />
+
+[click to jump **simple React branch**](https://github.com/gugugaaa/Chem_Lab_detect/tree/react-gui)
+
+---
+
+under [MIT License](LICENSE)
