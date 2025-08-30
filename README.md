@@ -21,6 +21,8 @@ Modules and pipelines for chemical laboratory experiment monitoring.
 
 *Recommended to use frame sampling for optimal performance.*
 
+[click to view **interface doc**](debug/interface_info.md)
+
 ## Project Structure 📁
 
 ```

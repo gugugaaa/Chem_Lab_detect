@@ -33,7 +33,7 @@ def fit_line_and_correct(points, keep_idx=None):
         corrected.append(new_p)
     return corrected
 
-def correct_vessel_keypoints(info, visualize=False):
+def correct_vessel_keypoints(info):
     """
     输入 info: vessel_cascade.py 输出的 detection_info 字典
     返回矫正后的 info（格式不变）

@@ -1,6 +1,4 @@
 import cv2
-import random
-import time
 from ultralytics import YOLO
 import os
 import sys

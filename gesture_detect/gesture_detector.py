@@ -1,4 +1,3 @@
-# STEP 1: Import the necessary modules.
 import mediapipe as mp
 import cv2
 import os
@@ -32,7 +31,7 @@ class GestureDetector:
             min_hand_presence_confidence: 手部存在置信度阈值
             min_tracking_confidence: 手部跟踪置信度阈值
         """
-        # STEP 2: 创建一个HandLandmarker对象
+        # 创建一个HandLandmarker对象
         base_options = python.BaseOptions(model_asset_path=model_path)
         options = vision.HandLandmarkerOptions(
             base_options=base_options,
