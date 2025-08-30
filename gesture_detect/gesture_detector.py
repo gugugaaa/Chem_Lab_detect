@@ -43,11 +43,6 @@ class GestureDetector:
         self.detector = vision.HandLandmarker.create_from_options(options)
         self.fps_calculator = FpsCalculator(buffer_len=100)  # 创建FPS计算器实例
     
-    def __del__(self):
-        """析构函数，释放检测器资源"""
-        if hasattr(self, 'detector'):
-            del self.detector
-    
     def detect_frame(self, frame):
         """
         检测单帧图像中的手势
@@ -184,43 +179,6 @@ class GestureDetector:
         else:
             out_img = blurred_img
         return out_img, scale
-
-    
-    def process_video(self, video_source=0, display=True):
-        """
-        处理视频流
-        
-        Args:
-            video_source: 视频源，可以是摄像头索引或视频文件路径
-            display: 是否显示处理结果
-            
-        Returns:
-            None
-        """
-        cap = cv2.VideoCapture(video_source)
-        
-        if not cap.isOpened():
-            print("Error: Could not open video source.")
-            return
-            
-        try:
-            while cap.isOpened():
-                ret, frame = cap.read()
-                if not ret:
-                    break
-                
-                processed_frame, detection_info = self.detect_frame(frame)
-                
-                if display:
-                    cv2.imshow("Hand Gesture Detection", processed_frame)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):  # 按q退出
-                        break
-                        
-        finally:
-            cap.release()
-            if display:
-                cv2.destroyAllWindows()
-
 
     def debug_image_predict(self, image_path):
         """

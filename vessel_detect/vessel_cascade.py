@@ -58,12 +58,6 @@ class VesselCascadeDetector:
             'volumetric_flask': volumetric_flask_kpt_names
         }
 
-    def __del__(self):
-        if hasattr(self, 'vessel_box_model'):
-            del self.vessel_box_model
-        for m in self.pose_models.values():
-            del m
-
     def detect(self, frame):
         """
         检测图像中的容器及关键点
@@ -175,26 +169,6 @@ class VesselCascadeDetector:
             draw_bbox=True
         )
         return processed_frame, detection_info
-
-    def process_video(self, video_source=0, display=True):
-        cap = cv2.VideoCapture(video_source)
-        if not cap.isOpened():
-            print("Error: Could not open video source.")
-            return
-        try:
-            while cap.isOpened():
-                ret, frame = cap.read()
-                if not ret:
-                    break
-                processed_frame, detection_info = self.detect_frame(frame)
-                if display:
-                    cv2.imshow("Vessel Cascade Detection", processed_frame)
-                    if cv2.waitKey(1) & 0xFF == ord('q'):
-                        break
-        finally:
-            cap.release()
-            if display:
-                cv2.destroyAllWindows()
 
     def debug_image_predict(self, image_path):
         img = cv2.imread(image_path)

@@ -32,13 +32,6 @@ class SafetyDetector:
         self.conf = conf
         self.show_kpt_names = show_kpt_names
         self.fps_calculator = FpsCalculator(buffer_len=100)
-    
-    def __del__(self):
-        """析构函数，释放资源"""
-        if hasattr(self, 'man_model'):
-            del self.man_model
-        if hasattr(self, 'wearing_model'):
-            del self.wearing_model
 
     def detect_frame(self, frame):
         """

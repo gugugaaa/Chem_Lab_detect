@@ -25,11 +25,6 @@ class VesselDetector:
         self.fps_calculator = FpsCalculator(buffer_len=100)
         # 字典来存储类别和颜色的映射
         self.category_colors = {}
-    
-    def __del__(self):
-        """析构函数，释放资源"""
-        if hasattr(self, 'model'):
-            del self.model
 
     def detect_frame(self, frame, bbox_colors=vessel_bbox_colors, show_names=False, draw_bbox=True):
         """
