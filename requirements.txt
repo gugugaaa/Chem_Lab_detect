@@ -4,3 +4,6 @@ ultralytics
 mediapipe
 scikit-learn
 xgboost
+fastapi
+uvicorn
+python-multipart

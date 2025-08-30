@@ -8,7 +8,11 @@
 
 ### safety_detector.py
 
-SafetyDetector.detect_frame()
+```python
+def detect_frame(self, frame: np.ndarray) -> Tuple[np.ndarray, dict]
+```
+输入: `frame` (BGR格式的numpy数组)
+输出: `(processed_frame, detection_info)`，分别为处理后的图像和检测信息字典
 
 {
   'hand_safety': {
@@ -24,7 +28,11 @@ SafetyDetector.detect_frame()
 
 ### gesture_detector.py
 
-GestureDetector.detect_frame()
+```python
+def detect_frame(self, frame: np.ndarray) -> Tuple[np.ndarray, dict]
+```
+输入: `frame` (BGR格式的numpy数组)
+输出: `(processed_frame, detection_info)`，分别为处理后的图像和检测信息字典
 
 {
   'hands': [
@@ -51,7 +59,11 @@ GestureDetector.detect_frame()
 
 ### vessel_cascade_detector.py
 
-VesselCascadeDetector.detect_frame()
+```python
+def detect_frame(self, frame: np.ndarray) -> Tuple[np.ndarray, dict]
+```
+输入: `frame` (BGR格式的numpy数组)
+输出: `(processed_frame, detection_info)`，分别为处理后的图像和检测信息字典
 
 {
   'vessels': [
@@ -72,20 +84,32 @@ VesselCascadeDetector.detect_frame()
 
 ### vessel_keypoint_corrector.py
 
-VesselKeypointCorrector.correct_vessel_keypoints()
-
-仅更新vessel_info的keypoints字段，格式不变
+```python
+def correct_vessel_keypoints(vessel_info: dict) -> dict
+```
+输入: `vessel_info` (容器检测信息字典)
+输出: 更新后的 `vessel_info` 字典，仅更新keypoints字段，格式不变
 
 ## xgboost_scorer/
 
 ### action_scorer.py
 
-ActionScorer.score_frame()
-（内部调用FeatureExtractor.extract()）
-
+```python
+def score_frame(self, vessel_info: dict, gesture_info: dict) -> Optional[dict]
+```
+输入: `vessel_info` (容器检测信息字典), `gesture_info` (手势检测信息字典)
+输出: 操作评分信息字典，如
 {
   "operation": "beaker+graduated_cylinder",
   "score": 95.5
 }
 
 > 假设一张图片只有一人操作。因此返回一份操作的评分信息
+
+## debug/score_pipeline.py
+
+```python
+def detect_frame(self, frame: np.ndarray) -> Tuple[np.ndarray, dict]
+```
+输入: `frame` (BGR格式的numpy数组)
+输出: `(vis_frame, result)`，分别为可视化图像和包含 vessel_info、gesture_info、score_result 的字典
