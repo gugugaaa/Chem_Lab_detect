@@ -1,7 +1,7 @@
-# Chemistry Lab Detection System (Vite + React + TS)
+# Chem Lab Detect Fork (Vite + React + TS)
 
 > This is a quick Vite + React + TypeScript implementation for the main branch.  
-> ![Main branch](https://github.com/gugugaaa/Chem_Lab_detect/tree/main)
+> [click to view **Main branch**](https://github.com/gugugaaa/Chem_Lab_detect/tree/main)
 
 ## Overview
 
@@ -17,3 +17,7 @@
 - Right: scoring detection image  
 - Bottom: detection results
 - Fetch data from the above endpoints
+
+<div align="center">
+    <img src="debug/ui_design.png" alt="ui_design" style="width:300px;max-width:100%;height:auto;">
+</div>
