@@ -1,29 +1,44 @@
-# Chemistry Lab Detection System 🔬
+# Chem_Lab_detect
 
-[![wakatime](https://wakatime.com/badge/user/9af6799e-0454-4009-b789-fb07d1e221c3/project/b2a58f2a-facb-4d07-b388-e3dd5966933d.svg)](https://wakatime.com/badge/user/9af6799e-0454-4009-b789-fb07d1e221c3/project/b2a58f2a-facb-4d07-b388-e3dd5966933d)
+为化学实验仪器和操作实时检测和评分
 
-A computer vision system for real-time detection and analysis of laboratory vessels and equipment.
+## 概述
 
-## Project Overview ✨
+系统流程如下:
 
-Modules and pipelines for chemical laboratory experiment monitoring.
+**Thread 1: 安全检测**
+- 穿着安全 (手套, 实验服)
 
-**Thread 1: Safety Detection**
-- Safety gear detection (gloves, lab coats)
+**Thread 2: 评分方法**
+- **手势识别**: 为实验手套设计,特殊版本 MediaPipe
+- **仪器检测**: 
+  - 获得容器bbox, 识别并裁切
+  - 填充裁切结果, 识别pose
+  - 根据规则矫正遮挡/异常pose点
+- **动作评分**: XGBoost模型打分
 
-**Thread 2: Score Pipeline**
-- **Gesture Detection**: MediaPipe hand tracking
-- **Vessel Detection**: 
-  - Bounding box model for vessel localization and cropping
-  - Pose model for keypoint detection
-  - Post-processing for keypoint correction
-- **Action Scoring**: XGBoost-based operation evaluation
+*边缘设备上, 建议降低分辨率到 320.*
 
-*Recommended to use frame sampling for optimal performance.*
+<img src="https://i.ibb.co/d0TWRWyc/rk3588.jpg" width=300>
 
-[click to view **interface doc**](debug/interface_info.md)
+[点击查看 **接口文档**](debug/interface_info.md)
 
-## Project Structure 📁
+## 效果展示
+
+<img src="examples/results/safety_test.png" alt="Safety detection result" width="300" />
+
+安全检测效果
+
+<img src="examples/results/vessel_test.png" alt="Vessel keypoints" width="400" />
+
+容器关键点检测
+
+<img src="examples/results/scorer_test.png" alt="Action score result" width="300" />
+
+动作评分
+
+
+## 文件结构
 
 ```
 Chem_Lab_detect/
@@ -37,22 +52,11 @@ Chem_Lab_detect/
 └── examples/                # Examples to debug on
 ```
 
-## Results Display 🎉
 
-<img src="examples/results/safety_test.png" alt="Safety detection result" width="300" />
-<p><em>Safety detection result example</em></p>
-
-<img src="examples/results/vessel_test.png" alt="Vessel keypoints" width="400" />
-<p><em>Vessel keypoints definition</em></p>
-
-<img src="examples/results/scorer_test.png" alt="Action score result" width="300" />
-<p><em>Action score result example</em></p>
-
-## Implement 🛠️
-
+## 应用
 <img src="https://raw.githubusercontent.com/gugugaaa/Chem_Lab_detect/refs/heads/react-gui/debug/ui_design.png" alt="UI design" width="300" />
 
-[click to jump **simple React branch**](https://github.com/gugugaaa/Chem_Lab_detect/tree/react-gui)
+[点击查看 **一个简单的前端版本**](https://github.com/gugugaaa/Chem_Lab_detect/tree/react-gui)
 
 ---
 
