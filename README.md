@@ -19,6 +19,14 @@
 
 *边缘设备上, 建议降低分辨率到 320.*
 
+视频流边缘部署示例见 `examples/video_frame_sampling.py`：默认每 5 帧执行一次检测，
+中间帧复用最近一次检测可视化结果，降低连续视频推理开销。
+
+```bash
+python examples/video_frame_sampling.py --source camera --detector safety --frame-interval 5 --width 320
+python examples/video_frame_sampling.py --source input.mp4 --detector score --output output.mp4 --no-display
+```
+
 <img src="https://i.ibb.co/d0TWRWyc/rk3588.jpg" width=300>
 
 [点击查看 **接口文档**](debug/interface_info.md)
